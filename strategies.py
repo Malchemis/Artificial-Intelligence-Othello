@@ -32,11 +32,7 @@ def strategy_human(board: np.ndarray, moves: set, adj_cells=None) -> tuple:
     Returns:
         tuple: next move
     """
-    x,y = cv2_display(board.shape[0], board, moves, adj_cells=adj_cells)
-    for move in moves:
-        if move[0] == x and move[1] == y:
-            return move
-    return None
+    return cv2_display(board.shape[0], board, moves, adj_cells=adj_cells)
 
 def greedy(board: np.ndarray, moves: set, turn: int) -> tuple:
     pass
