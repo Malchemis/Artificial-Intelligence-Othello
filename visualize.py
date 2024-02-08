@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def cv2_display(size: int, board: np.ndarray, moves, height: int = 800, width: int = 800, background: tuple = (0, 130, 0), adj_cells: set = None):
+def cv2_display(size: int, board: np.ndarray, moves, height: int = 800, width: int = 800, background: tuple = (0, 130, 0), adj_cells: set = None, display_only: bool = False, last_display: bool = False) -> tuple:
     """
     Display the Othello board using OpenCV
 
@@ -44,6 +44,12 @@ def cv2_display(size: int, board: np.ndarray, moves, height: int = 800, width: i
     if key == ord('q'):
         cv2.destroyAllWindows()
         exit()
+        
+    if display_only:
+        if last_display:
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+        return
     # Wait for the user to click on a cell
     x, y = cv2_setMouseCallback(size, img)
     while (x, y) not in moves_x_y_only:

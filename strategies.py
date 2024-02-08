@@ -3,7 +3,7 @@ import numpy as np
 
 from visualize import cv2_display
 
-def strategy_bot(strategy_i:int, board: np.ndarray, moves: set, turn: int) -> tuple:
+def strategy_bot(strategy_i:int, board: np.ndarray, moves: set, turn: int, adj_cells=None, display=False) -> tuple:
     """Return the next move
 
     Args:
@@ -15,6 +15,8 @@ def strategy_bot(strategy_i:int, board: np.ndarray, moves: set, turn: int) -> tu
     Returns:
         tuple: next move
     """
+    if display:
+        cv2_display(board.shape[0], board, moves, adj_cells=None, display_only=True)
     if strategy_i is None:
         return random.choice(list(moves))
     elif strategy_i == 0:

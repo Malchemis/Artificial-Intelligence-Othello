@@ -35,7 +35,7 @@ def timit(func):
     return wrapper
 
 @timit
-def othello(mode:int, strategy_i:int=None, size:int = 8) -> int:
+def othello(mode:int, strategy_i:int=None, size:int = 8, display:bool = False) -> int:
     """Handles the game logic of Othello. We keep track of the board, the turn, the possible moves and the adjacent cells.
     - The game is played on an 8x8 board by default.
     - The game is played by two players, one with the black pieces (value -1) and one with the white pieces (value +1). Empty cells are represented by 0.
@@ -47,6 +47,7 @@ def othello(mode:int, strategy_i:int=None, size:int = 8) -> int:
         mode (int): describe if it's BotvBot, BotvHuman, HumanvBot or HumanvHuman (0, 1, 2, 3 respectively)
         strategy_i (int, optional): describe the strategy of the bot. Defaults to None (~random), 0: greedy, 1: minimax
         size (int, optional): size of the board. Defaults to 8.
+        display (bool, optional): display the board for the bots. Defaults to False.
     Returns:
         int: return code. 0 if finished correclty
     """
@@ -59,20 +60,22 @@ def othello(mode:int, strategy_i:int=None, size:int = 8) -> int:
     init_board(board)                   # set the starting positions
     init_adjacent_cells(adjacent_cells) # set the adjacent cells
     
-    while game_status(board, adjacent_cells, turn):
-        print("Turn:", "Black" if turn == -1 else "White")
-        print(board)
+    while len(adjacent_cells) > 0:
+        # print("Turn:", "Black" if turn == -1 else "White")
+        # print(board)
         moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn) # set the possible moves
         if len(moves) == 0:
-            print("No possible moves")
+            # print("No possible moves")
+            # verify if the other player can play
+            if len(get_possible_moves(board, adjacent_cells, -turn)[0]) == 0:
+                break
             turn *= -1
             continue
-        next_move = strategy(mode, strategy_i, board, moves, turn, adjacent_cells)
+        next_move = strategy(mode, strategy_i, board, moves, turn, adjacent_cells, display=display)
         play(board, next_move, turn, adjacent_cells, invalid_directions) # flip the cells, update adjacent cells, update possible moves
         turn *= -1
     get_winner(board)
-    cv2_display(board.shape[0], board, moves, adj_cells=adjacent_cells)
-    return 0
+    return 0, board, moves, adjacent_cells
 
 @timit
 def error_handling(mode:int, strategy_i:int, size:int) -> None:
@@ -117,22 +120,6 @@ def init_adjacent_cells(adjacent_cells: set, size:int = 8) -> None:
                             (size//2+1, size//2), (size//2, size//2+1), (size//2+1, size//2+1),     # bottom right
                             (size//2-2, size//2), (size//2-2, size//2+1), (size//2-1, size//2+1),   # bottom left
                             (size//2+1, size//2-1), (size//2, size//2-2), (size//2+1, size//2-2)])  # bottom left
-
-@timit
-def game_status(board: np.ndarray, adjacent_cells: set, turn: int) -> bool:
-    """Check if the game is finished
-
-    Args:
-        board (np.ndarray): board state
-        adjacent_cells (set): set of adjacent cells
-        turn (int): current player
-
-    Returns:
-        bool: True if the game is finished
-    """
-    if len(get_possible_moves(board, adjacent_cells, turn)[0]) == 0 and len(get_possible_moves(board, adjacent_cells, -turn)[0]) == 0:
-        return False
-    return True 
 
 
 @timit
@@ -185,7 +172,7 @@ def is_valid_direction(board: np.ndarray, x: int, y: int, dx: int, dy: int, turn
     return x >= 0 and x < board.shape[0] and y >= 0 and y < board.shape[1] and board[x][y] == turn and n_jump > 0, n_jump
 
 @timit
-def strategy(mode:int, strategy_i:int, board: np.ndarray, moves: set, turn: int, adj_cells=None) -> tuple:
+def strategy(mode:int, strategy_i:int, board: np.ndarray, moves: set, turn: int, adj_cells=None, display=False) -> tuple:
     """Return the next move
 
     Args:
@@ -199,7 +186,7 @@ def strategy(mode:int, strategy_i:int, board: np.ndarray, moves: set, turn: int,
         tuple: next move
     """
     if mode == 0 or (mode == 1 and turn == -1) or (mode == 2 and turn == 1):
-        return strategy_bot(strategy_i, board, moves, turn)
+        return strategy_bot(strategy_i, board, moves, turn, adj_cells=adj_cells, display=display)
     else:
         return strategy_human(board, moves, adj_cells=adj_cells)
 
@@ -254,17 +241,16 @@ def get_winner(board: np.ndarray) -> None:
 
 
 if __name__ == "__main__":
-    # Human vs Bot
-    othello(0)        
+    # Bot vs Bot
+    code, board, moves, adj_cells = othello(0, None, 8, display=False)   
+    cv2_display(board.shape[0], board, moves, adj_cells=adj_cells, display_only=True, last_display=True)
     # STATS
     intermediate_results.to_csv(os.path.join(path_dir, file2_name), index=False)
     intermediate_results = intermediate_results.groupby('function')
     # save all intermediate results in 'intermediate_results'
     for function, group in intermediate_results:
         results.loc[len(results)] = [function, group['execution_time'].sum(), group['execution_time'].values]
-    # Compute N: the number of iterations for each function, the Mean time, the standard deviation, the minimum and maximum time
-    stats = results.groupby('function').agg({'execution_time': ['count', 'mean', 'std', 'min', 'max']})
-    stats.columns = ['N', 'Mean', 'Std', 'Min', 'Max']
-    print(stats)
+    # Sort by execution time
+    results = results.sort_values(by='execution_time', ascending=False)
     print(results)
     results.to_csv(os.path.join(path_dir, file_name), index=False)
