@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def cv2_display(size: int, board: np.ndarray, moves, height: int = 800, width: int = 800, background: tuple = (0, 130, 0), adj_cells: set = None, display_only: bool = False, last_display: bool = False) -> tuple:
+def cv2_display(size: int, board: np.ndarray, moves: set,  adj_cells: set, height: int = 800, width: int = 800, background: tuple = (0, 130, 0), display_only: bool = False, last_display: bool = False) -> tuple:
     """
     Display the Othello board using OpenCV
 
