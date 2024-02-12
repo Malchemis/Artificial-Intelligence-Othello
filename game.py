@@ -356,7 +356,7 @@ def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> in
     """
     if np.sum(board != 0) < 20:
         return s_positionnal(board, adjacent_cells, turn, depth)
-    if np.sum(board != 0) < 44:
+    if np.sum(board != 0) < 50:
         return s_mobility(board, adjacent_cells, turn, depth)
     return s_absolute(board, adjacent_cells, turn, depth)
 
