@@ -4,6 +4,7 @@ import random
 from visualize import cv2_display
 from minmax_params import TABLE1, TABLE2, MAX_DEPTH, MAX_INT
 
+from tqdm import tqdm
 import time
 import cProfile
 import pstats
@@ -423,9 +424,10 @@ def time_n(n: int, params: tuple) -> None:
     """
     onset = time.time()
     wins = []
-    for _ in range(n):
+    for _ in tqdm(range(n), desc="Progress", unit="iteration"):
         code, board, moves, adj_cells = othello(*params)
         wins.append(code)
+        
     offset = time.time()
     print("\nTime:", offset-onset,"s")
     if n > 1:
