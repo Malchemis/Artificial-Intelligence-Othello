@@ -1,9 +1,9 @@
 import numpy as np
 
-MAX_DEPTH = 5
-MAX_INT = np.iinfo(np.int16).max
+MAX_DEPTH = 2
+MAX_INT = float('inf')
 
-table1 = np.array(
+TABLE1 = np.array(
     [
         [500, -150, 30, 10, 10, 30, -150, 500],
         [-150, -250, 0, 0, 0, 0, -250, -150],
@@ -16,7 +16,7 @@ table1 = np.array(
     ]
 )
 
-table2 = np.array(
+TABLE2 = np.array(
     [
         [100, -20, 10, 5, 5, 10, -20, 100],
         [-20, -50, -2, -2, -2, -2, -50, -20],
@@ -28,5 +28,3 @@ table2 = np.array(
         [100, -20, 10, 5, 5, 10, -20, 100]
     ]
 )
-
-TABLE = table1
