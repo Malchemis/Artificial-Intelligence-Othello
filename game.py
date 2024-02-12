@@ -76,7 +76,7 @@ def init_board(board: np.ndarray, size:int = 8) -> None:
     board[size//2][size//2] =  1
     board[size//2-1][size//2] = -1
     board[size//2][size//2-1] = -1
-    
+
 
 def init_adjacent_cells(adjacent_cells: set, size:int = 8) -> None:
     """Set the adjacent cells
@@ -89,7 +89,6 @@ def init_adjacent_cells(adjacent_cells: set, size:int = 8) -> None:
                             (size//2+1, size//2), (size//2, size//2+1), (size//2+1, size//2+1),     # bottom right
                             (size//2-2, size//2), (size//2-2, size//2+1), (size//2-1, size//2+1),   # bottom left
                             (size//2+1, size//2-1), (size//2, size//2-2), (size//2+1, size//2-2)])  # bottom left
-
 
 
 def get_possible_moves(board: np.ndarray, adjacent_cells: set, turn: int) -> set:
@@ -336,12 +335,18 @@ def time_n(n: int, params: tuple) -> None:
         params (tuple): parameters of the game
     """
     onset = time.time()
+    wins = []
     for _ in range(n):
-        code, board, moves, adj_cells = othello(*params)
+        code, _, _, _ = othello(*params)
+        wins.append(code)
     offset = time.time()
     print("Time:", offset-onset)
-    print("Average time:", (offset-onset)/n)
+    if n > 1:
+        print("Average time:", (offset-onset)/n)
+        print("Black won:", wins.count(-1), '(' + str(wins.count(-1)/n*100) + '%)')
+        print("White won:", wins.count(1), '(' + str(wins.count(1)/n*100) + '%)')
+        print("Draw:", wins.count(0), '(' + str(wins.count(0)/n*100) + '%)')
 
 if __name__ == "__main__":
     # code, board, moves, adj_cells = profile((0, None, 8, True))
-    time_n(1, (0, 2, 8, True))
+    time_n(1000, (0, 0, 8, True))
