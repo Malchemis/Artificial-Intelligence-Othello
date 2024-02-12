@@ -8,77 +8,81 @@ import time
 import cProfile
 import pstats
 
+DIRECTIONS = {(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)}
 
-def othello(mode:int, strategy_i:int=0, size:int = 8, display:bool = False) -> int:
-    """Handles the game logic of Othello. We keep track of the board, the turn, the possible moves and the adjacent cells.
+def othello(mode:tuple, size:int = 8, display:bool = False, verbose:bool = False) -> int:
+    """
+    Handles the game logic of Othello. We keep track of the board, the turn, the possible moves and the adjacent cells.
     - The game is played on an 8x8 board by default.
     - The game is played by two players, one with the black pieces (value -1) and one with the white pieces (value +1). Empty cells are represented by 0.
     - The game starts with 2 black pieces and 2 white pieces in the center of the board.    
 
     Args:
-        mode (int): describe if it's BotvBot, BotvHuman, HumanvBot or HumanvHuman (0, 1, 2, 3 respectively)
-        strategy_i (int, optional): describe the strategy of the bot. Defaults to 0 (~random), 1: minmax, 2: greedy.
+        mode (tuple): describe the stategy and the player type. 0: Human, >=1: Bot (1: random, 2: postional, 3: absolute, 4: mobility, 5: mixed)
         size (int, optional): size of the board. Defaults to 8.
         display (bool, optional): display the board for the bots. Defaults to False.
+        verbose (bool, optional): print the winner. Defaults to False.
     Returns:
-        int: return code. 0 if finished correclty
+        int: return code. -1 if black wins, 0 if draw, 1 if white wins
     """ 
-    error_handling(mode, strategy_i, size)
-    # init board, turn, adjacent cells, possible moves
+    error_handling(mode, size)
     board = np.zeros((size, size), dtype=int)
     adjacent_cells = set()
     turn = -1 # Black starts
     init_board(board)                   # set the starting positions
     init_adjacent_cells(adjacent_cells) # set the adjacent cells
+    
     while len(adjacent_cells) >= 0:
         moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn) # set the possible moves
+        
         if len(moves) == 0:
             # verify if the other player can play
             if len(get_possible_moves(board, adjacent_cells, -turn)[0]) == 0:
                 break
             turn *= -1
             continue
+        
         copy_turn = turn # we are careful not to modify the turn, specially for minmax
-        next_move = strategy(mode, strategy_i, board, moves, copy_turn, adjacent_cells.copy(), display=display)
+        next_move = strategy(mode, board, moves, copy_turn, adjacent_cells.copy(), display=display)
         play(board, next_move, turn, adjacent_cells, invalid_directions) # flip the cells, update adjacent cells, update possible moves
         turn *= -1
     
-    return get_winner(board), board, moves, adjacent_cells
+    return get_winner(board, verbose), board, moves, adjacent_cells
 
 
-def error_handling(mode:int, strategy_i:int, size:int) -> None:
-    """Check if the input parameters are correct
+def error_handling(mode: tuple, size: int) -> None:
+    """
+    Check if the input parameters are correct
 
     Args:
-        mode (int): describe if it's BotvBot, BotvHuman, HumanvBot or HumanvHuman (0, 1, 2, 3 respectively)
-        strategy_i (int): describe the strategy of the bot. 0: random, 1: minmax, 2: greedy
+        mode (tuple): describe the stategy and the player type. 0: Human, >=1: Bot (1: random, 2: postional, 3: absolute, 4: mobility, 5: mixed). For example: (0, 1) means Human vs Bot with the random strategy
         size (int): size of the board
     """
     if size < 4:
         raise ValueError("Size must be at least 4")
     if size % 2 != 0:
         raise ValueError("Size must be an even number")
-    if mode not in [0, 1, 2, 3]:
-        raise NotImplementedError("Mode not implemented")
-    if strategy_i not in [0, 1, 2]:
-        raise NotImplementedError("Strategy not implemented")
+    if not all(0 <= m <= 5 for m in mode):
+        raise ValueError("Invalid mode")
+    return 0
 
-
-def init_board(board: np.ndarray, size:int = 8) -> None:
-    """Set the starting positions of the board
+def init_board(board: np.ndarray, size: int = 8) -> None:
+    """
+    Set the starting positions of the board
 
     Args:
         board (np.ndarray): board state
         size (int, optional): size of the board. Defaults to 8.
     """
-    board[size//2-1][size//2-1] =  1
-    board[size//2][size//2] =  1
-    board[size//2-1][size//2] = -1
-    board[size//2][size//2-1] = -1
+    board[size // 2 - 1][size // 2 - 1] = 1
+    board[size // 2][size // 2] = 1
+    board[size // 2 - 1][size // 2] = -1
+    board[size // 2][size // 2 - 1] = -1
 
 
 def init_adjacent_cells(adjacent_cells: set, size:int = 8) -> None:
-    """Set the adjacent cells
+    """
+    Set the adjacent cells
 
     Args:
         adjacent_cells (set): set of adjacent cells
@@ -87,11 +91,12 @@ def init_adjacent_cells(adjacent_cells: set, size:int = 8) -> None:
     adjacent_cells.update( [(size//2-2, size//2-1), (size//2-1, size//2-2), (size//2-2, size//2-2), # top left
                             (size//2+1, size//2), (size//2, size//2+1), (size//2+1, size//2+1),     # bottom right
                             (size//2-2, size//2), (size//2-2, size//2+1), (size//2-1, size//2+1),   # bottom left
-                            (size//2+1, size//2-1), (size//2, size//2-2), (size//2+1, size//2-2)])  # bottom left
+                            (size//2+1, size//2-1), (size//2, size//2-2), (size//2+1, size//2-2)])  # top right
 
 
 def get_possible_moves(board: np.ndarray, adjacent_cells: set, turn: int) -> set:
-    """Get the possible moves of the current player
+    """
+    Get the possible moves of the current player
 
     Args:
         board (np.ndarray): board state
@@ -99,15 +104,16 @@ def get_possible_moves(board: np.ndarray, adjacent_cells: set, turn: int) -> set
         turn (int): current player
 
     Returns:
-        set: set of possible moves
+        list: list of possible moves
+        set: set of invalid directions
     """
-    possible_moves = set()
+    possible_moves = []
     invalid_directions = set()
     for x, y in adjacent_cells:
-        for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+        for dx, dy in DIRECTIONS:
             is_valid, n_jump = is_valid_direction(board, x, y, dx, dy, turn)
             if is_valid:
-                possible_moves.add((x, y, n_jump, dx, dy))
+                possible_moves.append((x, y, n_jump, dx, dy))
                 break
             else:
                 invalid_directions.add((dx, dy))
@@ -141,25 +147,6 @@ def is_valid_direction(board: np.ndarray, x: int, y: int, dx: int, dy: int, turn
     return x >= 0 and x < board.shape[0] and y >= 0 and y < board.shape[1] and board[x][y] == turn and n_jump > 0, n_jump
 
 
-def strategy(mode:int, strategy_i:int, board: np.ndarray, moves: set, turn: int, adj_cells, display=False) -> tuple:
-    """Return the next move
-
-    Args:
-        mode (int): describe if it's BotvBot, BotvHuman, HumanvBot or HumanvHuman (0, 1, 2, 3 respectively)
-        strategy_i (int): describe the strategy of the bot. 0: random, 1: minmax, 2: greedy
-        board (np.ndarray): board state
-        moves (set): set of possible moves
-        turn (int): current player
-
-    Returns:
-        tuple: next move
-    """
-    if mode == 0 or (mode == 1 and turn == -1) or (mode == 2 and turn == 1):
-        return strategy_bot(strategy_i, board, moves, turn, adj_cells, display=display)
-    else:
-        return strategy_human(board, moves, adj_cells)
-
-
 def play(board: np.ndarray, move: tuple, turn: int, adjacent_cells: set, invalid_directions: set) -> None:
     """Play the move
 
@@ -178,7 +165,7 @@ def play(board: np.ndarray, move: tuple, turn: int, adjacent_cells: set, invalid
         board[x][y] = turn
     x, y = old_x, old_y
     # We update other possible directions (the break in the get_possible_moves function prevent us from having more than 1 valid direction)
-    for dx, dy in set([(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]) - invalid_directions - {(dx, dy)}:
+    for dx, dy in DIRECTIONS - invalid_directions - {(dx, dy)}:
         is_valid, n_jump = is_valid_direction(board, x, y, dx, dy, turn)
         if is_valid:
             for _ in range(n_jump):
@@ -189,45 +176,72 @@ def play(board: np.ndarray, move: tuple, turn: int, adjacent_cells: set, invalid
     
     # update adjacent cells
     adjacent_cells.discard((old_x, old_y))
-    for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+    for dx, dy in DIRECTIONS:
         if old_x+dx >= 0 and old_x+dx < board.shape[0] and old_y+dy >= 0 and old_y+dy < board.shape[1] and board[old_x+dx][old_y+dy] == 0:
             adjacent_cells.add((old_x+dx, old_y+dy))
 
-def strategy_bot(strategy_i:int, board: np.ndarray, moves: set, turn: int, adj_cells, display=False) -> tuple:
+def strategy(mode:tuple, board: np.ndarray, moves: list, turn: int, adjacent_cells: set, display: bool) -> tuple:
     """Return the next move
 
     Args:
-        strategy_i (int): describe the strategy of the bot. 0: random, 1: minmax, 2: greedy
+        mode (tuple): describe the stategy and the player type. 0: Human, >=1: Bot (1: random, 2: postional, 3: absolute, 4: mobility, 5: mixed)
         board (np.ndarray): board state
-        moves (set): set of possible moves
+        moves (list): list of possible moves
         turn (int): current player
+        adjacent_cells (set): set of adjacent cells
+        display (bool): display the board for the bots
 
     Returns:
         tuple: next move
     """
     if display:
-        cv2_display(board.shape[0], board, moves, adj_cells, display_only=True)
-    if strategy_i == 0:
-        return random.choice(list(moves))
-    if strategy_i == 1:
-        return negamax(board, adj_cells, turn, strategy_i)[1]
-    return greedy(board, adj_cells, turn, strategy_i)[1]
+        cv2_display(board.shape[0], board, moves, turn, adjacent_cells, display_only=True)
+        
+    if turn == -1:
+        player = mode[0]
+    else:
+        player = mode[1]
+        
+    if player == 0:
+        return s_human(board, moves, adjacent_cells, turn)
+    if player == 1:
+        return s_random(moves)
+    if player == 2:
+        return s_positionnal(board, adjacent_cells, turn, 0)[1]
+    if player == 3:
+        return s_absolute(board, adjacent_cells, turn, 0)[1]
+    if player == 4:
+        return s_mobility(board, adjacent_cells, turn, 0)[1]
+    if player == 5:
+        return s_mixed(board, adjacent_cells, turn, 0)[1]
 
-def strategy_human(board: np.ndarray, moves: set, adj_cells) -> tuple:
+def s_random(moves: list) -> tuple:
+    """Return a random move
+
+    Args:
+        moves (list): list of possible moves
+
+    Returns:
+        tuple: next move
+    """
+    return random.choice(moves)
+
+
+def s_human(board: np.ndarray, moves: list, adj_cells, turn) -> tuple:
     """Display the board using cv2 and return a move from the user
     
     Args:
         board (np.ndarray): board state
-        moves (set): set of possible moves
+        moves (list): list of possible moves
         
     Returns:
         tuple: next move
     """
-    return cv2_display(board.shape[0], board, moves, adj_cells)
+    return cv2_display(board.shape[0], board, moves, turn, adj_cells)
 
-def greedy(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> tuple:
+def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> tuple:
     """
-    Like minmax, but looks at the number of pieces flipped (tries to maximize (player's pieces - opponent's pieces)) instead of using a heuristic.
+    Looks at the number of pieces flipped (tries to maximize (player's pieces - opponent's pieces)).
     
     Args:
         board (np.ndarray): board state
@@ -248,7 +262,7 @@ def greedy(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> tup
     for move in moves:
         board_copy = board.copy()
         play(board_copy, move, turn, adjacent_cells, invalid_directions)
-        score = -greedy(board_copy, adjacent_cells, -turn, depth+1)[0]
+        score = -s_absolute(board_copy, adjacent_cells, -turn, depth+1)[0]
         if score > best:
             best = score
             best_moves = [move]
@@ -262,12 +276,12 @@ def heuristic(board: np.ndarray, turn: int) -> tuple:
     """Which heuristic to use. We have 2 tables"""
     return np.sum(TABLE[np.where(board == 1)]) if turn == 1 else np.sum(TABLE[np.where(board == -1)])
 
-def negamax(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> tuple:
-    """Return the best move using negamax (minmax where the opponent's score is negated)
+def s_positionnal(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> tuple:
+    """Return the best move using heuristics
     
     Args:
         board (np.ndarray): board state
-        moves (set): set of possible moves
+        adjacent_cells (set): set of adjacent cells
         turn (int): current player
         depth (int): depth of the search
         
@@ -284,7 +298,7 @@ def negamax(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> tu
     for move in moves:
         board_copy = board.copy()
         play(board_copy, move, turn, adjacent_cells, invalid_directions)
-        score = -negamax(board_copy, adjacent_cells, -turn, depth+1)[0]
+        score = -s_positionnal(board_copy, adjacent_cells, -turn, depth+1)[0]
         if score > best:
             best = score
             best_moves = [move]
@@ -294,21 +308,80 @@ def negamax(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> tu
     return best, best_move
 
 
-def get_winner(board: np.ndarray) -> None:
-    """Print the winner
+def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> int:
+    """Return the best move using the mobility. Maximize the number of possible moves for the current player, and minimize the number of possible moves for the other player
+    
+    Args:
+        board (np.ndarray): board state
+        adjacent_cells (set): set of adjacent cells
+        turn (int): current player
+        depth (int): depth of the search
+        
+    Returns:
+        int: best score, best move
+    """
+    if len(adjacent_cells) == 0:
+        return turn
+    moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn)
+    size = len(moves)
+    if depth == MAX_DEPTH or size == 0:
+        return [size - len(get_possible_moves(board, adjacent_cells, -turn)[0])]
+    best = -MAX_INT
+    best_moves = []
+    for move in moves:
+        board_copy = board.copy()
+        play(board_copy, move, turn, adjacent_cells, invalid_directions)
+        score = -s_mobility(board_copy, adjacent_cells, -turn, depth+1)[0]
+        if score > best:
+            best = score
+            best_moves = [move]
+        elif score == best:
+            best_moves.append(move)
+    best_move = random.choice(best_moves)
+    return best, best_move
+
+
+def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int) -> int:
+    """Return the best move using phases. First phase (0-20) we use positionnal, then mobility, then absolute (44-64).
+    The idea is we get a positionnal advantage early, then we try to make it hard for the opponent to play, then we maximize the number of pieces flipped
+    
+    Args:
+        board (np.ndarray): board state
+        adjacent_cells (set): set of adjacent cells
+        turn (int): current player
+        depth (int): depth of the search
+        
+    Returns:
+        int: best score, best move
+    """
+    if np.sum(board != 0) < 20:
+        return s_positionnal(board, adjacent_cells, turn, depth)
+    if np.sum(board != 0) < 44:
+        return s_mobility(board, adjacent_cells, turn, depth)
+    return s_absolute(board, adjacent_cells, turn, depth)
+
+
+def get_winner(board: np.ndarray, verbose: bool) -> int:
+    """Print the winner and return the code of the winner
 
     Args:
         board (np.ndarray): board state
+    
+    Returns:
+        int: return code. -1 if black wins, 0 if draw, 1 if white wins
     """
     black = np.sum(board == -1)
     white = np.sum(board == 1)
     if black > white:
-        print("Black wins" + "(" + str(black) + " vs " + str(white) + ")" )
+        if verbose:
+            print("Black wins" + "(" + str(black) + " vs " + str(white) + ")" )
         return -1
     if black < white:
-        print("White wins" + "(" + str(white) + " vs " + str(black) + ")" )
+        if verbose:
+            print("White wins" + "(" + str(white) + " vs " + str(black) + ")" )
         return 1
-    print("Draw" + "(" + str(black) + " vs " + str(white) + ")" )
+    if verbose:
+        print("Draw" + "(" + str(black) + " vs " + str(white) + ")" )
     return 0
 
 def profile(params: tuple) -> None:
@@ -336,7 +409,7 @@ def time_n(n: int, params: tuple) -> None:
     onset = time.time()
     wins = []
     for _ in range(n):
-        code, _, _, _ = othello(*params)
+        code, board, moves, adj_cells = othello(*params)
         wins.append(code)
     offset = time.time()
     print("Time:", offset-onset)
@@ -345,7 +418,11 @@ def time_n(n: int, params: tuple) -> None:
         print("Black won:", wins.count(-1), '(' + str(wins.count(-1)/n*100) + '%)')
         print("White won:", wins.count(1), '(' + str(wins.count(1)/n*100) + '%)')
         print("Draw:", wins.count(0), '(' + str(wins.count(0)/n*100) + '%)')
+    else:
+        return code, board, moves, adj_cells
+    return _, _, _, _
 
 if __name__ == "__main__":
-    # code, board, moves, adj_cells = profile((0, None, 8, True))
-    time_n(1000, (0, 0, 8, False))
+    # code, board, moves, adj_cells = profile(((0, 5), 8, True, True))
+    code, board, moves, adj_cells = time_n(100000, ((1, 1), 8, False, True))
+    # cv2_display(8, board, moves, 1, adj_cells, display_only=True, last_display=True)
