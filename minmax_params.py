@@ -1,6 +1,6 @@
 import numpy as np
 
-MAX_DEPTH = 6
+MAX_DEPTH = 5
 MAX_INT = np.iinfo(np.int16).max
 
 table1 = np.array(
