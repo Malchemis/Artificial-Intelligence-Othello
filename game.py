@@ -31,7 +31,6 @@ def othello(mode:int, strategy_i:int=0, size:int = 8, display:bool = False) -> i
     init_board(board)                   # set the starting positions
     init_adjacent_cells(adjacent_cells) # set the adjacent cells
     while len(adjacent_cells) >= 0:
-        time.sleep(1)
         moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn) # set the possible moves
         if len(moves) == 0:
             # verify if the other player can play
@@ -349,4 +348,4 @@ def time_n(n: int, params: tuple) -> None:
 
 if __name__ == "__main__":
     # code, board, moves, adj_cells = profile((0, None, 8, True))
-    time_n(1000, (0, 0, 8, True))
+    time_n(1000, (0, 0, 8, False))
