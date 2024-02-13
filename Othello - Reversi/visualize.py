@@ -22,7 +22,6 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
         tuple: The selected move coordinates (x, y)
     """
     img = np.zeros((height, width, 3), dtype=np.uint8)
-    moves_x_y_only = [(move[0], move[1]) for move in moves] if moves is not None else []
 
     # Set the background color
     img[:] = background
@@ -41,13 +40,13 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
                 cv2.circle(img, (j * 100 + 50, i * 100 + 50), 40, (0, 0, 0), -1)
 
     # Add possible moves in grey, with a white or black border depending on the turn
-    for move in moves_x_y_only:
+    for (x, y) in moves[:, 0:2]:
         if turn == 1:
-            cv2.circle(img, (move[1] * 100 + 50, move[0] * 100 + 50), 40, (125, 125, 125), -1)
-            cv2.circle(img, (move[1] * 100 + 50, move[0] * 100 + 50), 40, (255, 255, 255), 2)
+            cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (125, 125, 125), -1)
+            cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (255, 255, 255), 2)
         else:
-            cv2.circle(img, (move[1] * 100 + 50, move[0] * 100 + 50), 40, (125, 125, 125), -1)
-            cv2.circle(img, (move[1] * 100 + 50, move[0] * 100 + 50), 40, (0, 0, 0), 2)
+            cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (125, 125, 125), -1)
+            cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (0, 0, 0), 2)
             
 
     # Add grid lines
@@ -70,7 +69,7 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
 
     # Wait for the user to click on a cell
     x, y = cv2_setMouseCallback(size, img)
-    while (x, y) not in moves_x_y_only:
+    while (x, y) in moves[:, 0:2]:
         x, y = cv2_setMouseCallback(size, img)
 
     cv2.destroyAllWindows()
