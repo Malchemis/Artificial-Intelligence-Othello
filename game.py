@@ -27,7 +27,7 @@ def othello(mode:tuple, size:int = 8, display:bool = False, verbose:bool = False
         int: return code. -1 if black wins, 0 if draw, 1 if white wins
     """
     error_handling(mode, size)
-    board = np.zeros((size, size), dtype=int)
+    board = np.zeros((size, size), dtype=np.int8)
     adjacent_cells = set()
     turn = -1 # Black starts
     init_board(board)                   # set the starting positions
@@ -215,15 +215,17 @@ def strategy(mode:tuple, board: np.ndarray, moves: list, turn: int, adjacent_cel
     if player == 1:
         return s_random(moves)
     if player == 2:
-        return s_positionnal(board, adjacent_cells, turn, 0, TABLE1, size)[1]
+        return s_positionnal(board, adjacent_cells, turn, 0, TABLE1, size, -MAX_INT, MAX_INT)[1]
     if player == 3:
-        return s_positionnal(board, adjacent_cells, turn, 0, TABLE2, size)[1]
+        return s_positionnal(board, adjacent_cells, turn, 0, TABLE2, size, -MAX_INT, MAX_INT)[1]
     if player == 4:
-        return s_absolute(board, adjacent_cells, turn, 0, size, size)[1]
+        return s_absolute(board, adjacent_cells, turn, 0, size, -MAX_INT, MAX_INT)[1]
     if player == 5:
-        return s_mobility(board, adjacent_cells, turn, 0, size)[1]
+        return s_mobility(board, adjacent_cells, turn, 0, size, -MAX_INT, MAX_INT)[1]
     if player == 6:
-        return s_mixed(board, adjacent_cells, turn, 0, size)[1]
+        return s_mixed(board, adjacent_cells, turn, 0, TABLE1, size, -MAX_INT, MAX_INT)[1]
+    if player == 7:
+        return s_mixed(board, adjacent_cells, turn, 0, TABLE2, size, -MAX_INT, MAX_INT)[1]
 
 def s_random(moves: list) -> tuple:
     """Return a random move
@@ -252,9 +254,10 @@ def s_human(board: np.ndarray, moves: list, adj_cells, turn, size: int) -> tuple
     """
     return cv2_display(size, board, moves, turn, adj_cells)
 
-def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, size: int) -> tuple:
+
+def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, size: int, alpha:int, beta:int) -> tuple:
     """
-    Looks at the number of pieces flipped (tries to maximize (player's pieces - opponent's pieces)).
+    Looks at the number of pieces flipped (tries to maximize (player's pieces - opponent's pieces)). MinMax (NegaMax) algorithm with alpha-beta pruning.
     
     Args:
         board (np.ndarray): board state
@@ -262,6 +265,8 @@ def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
         turn (int): current player
         depth (int): depth of the search
         size (int): size of the board
+        alpha (int): alpha value
+        beta (int): beta value
         
     Returns:
         tuple: best score, best move        
@@ -271,59 +276,68 @@ def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
     moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn, size)
     if len(moves) == 0:
         return [np.sum(board == turn) - np.sum(board == -turn)]
+    
     best = -MAX_INT
     best_moves = []
     for move in moves:
         board_copy = board.copy()
-        play(board_copy, move, turn, adjacent_cells, invalid_directions, size)
-        score = -s_absolute(board_copy, adjacent_cells, -turn, depth+1)[0]
+        adj_cells = adjacent_cells.copy()
+        play(board_copy, move, turn, adj_cells, invalid_directions, size)
+        score = -s_absolute(board_copy, adj_cells, -turn, depth+1, size, -beta, -alpha)[0]
         if score == best:
             best_moves.append(move)
         if score > best:
             best = score
             best_moves = [move]
+            if best > alpha:
+                alpha = best
+                if alpha >= beta:
+                    break
     best_move = random.choice(best_moves)
     return best, best_move
 
 
-def heuristic(board: np.ndarray, turn: int, table: np.ndarray) -> tuple:
-    """Which heuristic to use. We have 2 tables"""
-    return np.sum(table[np.where(board == 1)]) if turn == 1 else np.sum(table[np.where(board == -1)])
-
-def s_positionnal(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table: np.ndarray, size: int) -> tuple:
-    """Return the best move using heuristics
+def s_positionnal(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table: np.ndarray, size: int, alpha:int, beta:int) -> tuple:
+    """Return the best move using heuristics. MinMax (NegaMax) algorithm with alpha-beta pruning
     
     Args:
         board (np.ndarray): board state
         adjacent_cells (set): set of adjacent cells
         turn (int): current player
         depth (int): depth of the search
+        alpha (int): alpha value
+        beta (int): beta value
         
     Returns:
         tuple: best score, best move
     """
     if depth == MAX_DEPTH or len(adjacent_cells) == 0:
-        return [heuristic(board, turn, table)]
+        return [np.sum(table[np.where(board == turn)]) - np.sum(table[np.where(board == -turn)])]
     moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn, size)
     if len(moves) == 0:
-        return [heuristic(board, turn, table)]
+        return [np.sum(table[np.where(board == turn)]) - np.sum(table[np.where(board == -turn)])]
     best = -MAX_INT
     best_moves = []
     for move in moves:
         board_copy = board.copy()
-        play(board_copy, move, turn, adjacent_cells, invalid_directions, size)
-        score = -s_positionnal(board_copy, adjacent_cells, -turn, depth+1, table, size)[0]
+        adj_cells = adjacent_cells.copy()
+        play(board_copy, move, turn, adj_cells, invalid_directions, size)
+        score = -s_positionnal(board_copy, adj_cells, -turn, depth+1, table, size, -beta, -alpha)[0]
         if score == best:
             best_moves.append(move)
         if score > best:
             best = score
             best_moves = [move]
+            if best > alpha:
+                alpha = best
+                if alpha >= beta:
+                    break
     best_move = random.choice(best_moves)
     return best, best_move
 
 
-def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, size: int) -> int:
-    """Return the best move using the mobility. Maximize the number of possible moves for the current player, and minimize the number of possible moves for the other player
+def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, size: int, alpha:int, beta:int) -> tuple:
+    """Return the best move using the mobility. Maximize the number of possible moves for the current player, and minimize the number of possible moves for the other player. MinMax (NegaMax) algorithm with alpha-beta pruning
     
     Args:
         board (np.ndarray): board state
@@ -331,6 +345,8 @@ def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
         turn (int): current player
         depth (int): depth of the search
         size (int): size of the board
+        alpha (int): alpha value
+        beta (int): beta value
         
     Returns:
         int: best score, best move
@@ -338,43 +354,52 @@ def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
     if len(adjacent_cells) == 0:
         return [turn]
     moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn, size)
-    size = len(moves)
+    length_moves = len(moves)
     if depth == MAX_DEPTH or size == 0:
-        return [size - len(get_possible_moves(board, adjacent_cells, -turn, size)[0])]
+        return [length_moves - len(get_possible_moves(board, adjacent_cells, -turn, size)[0])]
+    
     best = -MAX_INT
     best_moves = []
     for move in moves:
         board_copy = board.copy()
-        play(board_copy, move, turn, adjacent_cells, invalid_directions, size)
-        score = -s_mobility(board_copy, adjacent_cells, -turn, depth+1, size)[0]
+        adj_cells = adjacent_cells.copy()
+        play(board_copy, move, turn, adj_cells, invalid_directions, size)
+        score = -s_mobility(board_copy, adj_cells, -turn, depth+1, size, -beta, -alpha)[0]
         if score == best:
             best_moves.append(move)
         if score > best:
             best = score
             best_moves = [move]
+            if best > alpha:
+                alpha = best
+                if alpha >= beta:
+                    break
     best_move = random.choice(best_moves)
     return best, best_move
 
 
-def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, size: int) -> int:
+def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table:np.ndarray, size: int, alpha:int, beta:int) -> tuple:
     """Return the best move using phases. First phase (0-20) we use positionnal, then mobility, then absolute (44-64).
     The idea is we get a positionnal advantage early, then we try to make it hard for the opponent to play, then we maximize the number of pieces flipped
-    
+
     Args:
         board (np.ndarray): board state
         adjacent_cells (set): set of adjacent cells
         turn (int): current player
         depth (int): depth of the search
+        table (np.ndarray): table of values
         size (int): size of the board
+        alpha (int): alpha value
+        beta (int): beta value
         
     Returns:
         int: best score, best move
     """
     if np.sum(board != 0) < 20:
-        return s_positionnal(board, adjacent_cells, turn, depth, size)
+        return s_positionnal(board, adjacent_cells, turn, depth, table, size, alpha, beta)
     if np.sum(board != 0) < 50:
-        return s_mobility(board, adjacent_cells, turn, depth, size)
-    return s_absolute(board, adjacent_cells, turn, depth, size)
+        return s_mobility(board, adjacent_cells, turn, depth, size, alpha, beta)
+    return s_absolute(board, adjacent_cells, turn, depth, size, alpha, beta)
 
 
 def get_winner(board: np.ndarray, verbose: bool) -> int:
@@ -441,5 +466,5 @@ def time_n(n: int, params: tuple) -> None:
 
 if __name__ == "__main__":
     # code, board, moves, adj_cells = profile(((1, 1), 8, False, True))
-    code, board, moves, adj_cells = time_n(1000000, ((1, 1), 8, False, False))
+    code, board, moves, adj_cells = time_n(10, ((0, 5), 8, True, True))
     # cv2_display(8, board, moves, 1, adj_cells, display_only=True, last_display=True)

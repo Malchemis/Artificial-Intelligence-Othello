@@ -1,7 +1,7 @@
 import numpy as np
 
-MAX_DEPTH = 2
-MAX_INT = float('inf')
+MAX_DEPTH = 5
+MAX_INT = 1000000000
 
 TABLE1 = np.array(
     [

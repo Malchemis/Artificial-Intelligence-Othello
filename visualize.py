@@ -37,7 +37,7 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
         for j in range(size):
             if board[i][j] == 1:
                 cv2.circle(img, (j * 100 + 50, i * 100 + 50), 40, (255, 255, 255), -1)
-            elif board[i][j] == -1:
+            if board[i][j] == -1:
                 cv2.circle(img, (j * 100 + 50, i * 100 + 50), 40, (0, 0, 0), -1)
 
     # Add possible moves in grey, with a white or black border depending on the turn
@@ -56,7 +56,6 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
         cv2.line(img, (i * 100, 0), (i * 100, width), (0, 0, 0), 1)
 
     cv2.imshow("Othello", img)
-    cv2.moveWindow("Othello", 200, 100)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
