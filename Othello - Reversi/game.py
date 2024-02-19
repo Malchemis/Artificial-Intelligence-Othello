@@ -1,15 +1,14 @@
-import numpy as np
-import random
-
-from visualize import cv2_display
-from minmax_params import TABLE1, TABLE2, MAX_DEPTH, MAX_INT
-
-from tqdm import tqdm
-import time
 import cProfile
 import pstats
-
+import random
+import time
 from typing import Tuple
+
+import numpy as np
+from tqdm import tqdm
+
+from minmax_params import TABLE1, TABLE2, MAX_DEPTH, MAX_INT
+from visualize import cv2_display
 
 DIRECTIONS = {(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)}
 
