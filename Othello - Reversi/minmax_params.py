@@ -1,7 +1,8 @@
 import numpy as np
 
-MAX_DEPTH = 5
-MAX_INT = np.iinfo(np.int16).max
+MAX_DEPTH = 2
+#MAX_INT = np.iinfo(np.int32).max
+MAX_INT = 10000
 
 TABLE1 = np.array(
     [

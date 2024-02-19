@@ -462,17 +462,19 @@ def time_n(n: int, params: tuple) -> Tuple[int, np.ndarray, list, set]:
         n (int): number of iterations
         params (tuple): parameters of the game
     """
-    onset = time.time()
     wins = []
     code, board, moves, adj_cells = -1, np.zeros((params[1], params[1]), dtype=np.int8), [], set()
+    onsets = []
+    offsets = []
     for _ in tqdm(range(n), desc="Progress", unit="iteration"):
+        onsets.append(time.perf_counter())
         code, board, moves, adj_cells = othello(*params)
+        offsets.append(time.perf_counter())
         wins.append(code)
 
-    offset = time.time()
-    print("\nTime:", offset - onset, "s")
+    print("\nTime:", offsets[-1] - onsets[0])
     if n > 1:
-        print("Average time:", (offset - onset) / n)
+        print("Average time:", (offsets[-1] - onsets[0]) / n)
         print("Black won:", wins.count(-1), '(' + str(wins.count(-1) / n * 100) + '%)')
         print("White won:", wins.count(1), '(' + str(wins.count(1) / n * 100) + '%)')
         print("Draw:", wins.count(0), '(' + str(wins.count(0) / n * 100) + '%)')
@@ -481,5 +483,5 @@ def time_n(n: int, params: tuple) -> Tuple[int, np.ndarray, list, set]:
 
 if __name__ == "__main__":
     # code, board, moves, adj_cells = profile(((1, 1), 8, False, True))
-    r_code, r_board, r_moves, r_adj_cells = time_n(10, ((0, 5), 8, True, True))
+    r_code, r_board, r_moves, r_adj_cells = time_n(100, ((1, 1), 8, False, False))
     # cv2_display(8, board, moves, 1, adj_cells, display_only=True, last_display=True)

@@ -24,6 +24,8 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
     Returns:
         tuple: The selected move coordinates (x, y)
     """
+    moves_xy = [(move[0], move[1]) for move in moves]
+
     img = np.zeros((height, width, 3), dtype=np.uint8)
 
     # Set the background color
@@ -44,7 +46,7 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
                 cv2.circle(img, (j * 100 + 50, i * 100 + 50), 40, (0, 0, 0), -1)
 
     # Add possible moves in grey, with a white or black border depending on the turn
-    for (x, y) in moves[:, 0:2]:
+    for (x, y) in moves_xy:
         if turn == 1:
             cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (125, 125, 125), -1)
             cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (255, 255, 255), 2)
@@ -72,7 +74,8 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
 
     # Wait for the user to click on a cell
     x, y = cv2_set_mouse_callback(img)
-    while (x, y) in moves[:, 0:2]:
+    # Verify if the cell is a valid move
+    while (x, y) not in moves_xy:
         x, y = cv2_set_mouse_callback(img)
 
     cv2.destroyAllWindows()
