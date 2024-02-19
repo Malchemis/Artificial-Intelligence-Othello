@@ -17,15 +17,24 @@ def othello(mode: tuple, size: int = 8, display: bool = False, verbose: bool = F
         -> Tuple[int, np.ndarray, list, set]:
     """
     Handles the game logic of Othello. We keep track of the board, the turn, the possible moves and the adjacent
-    cells. - The game is played on a 8x8 board by default. - The game is played by two players, one with the black
-    pieces (value -1) and one with the white pieces (value +1). Empty cells are represented by 0. - The game starts
-    with 2 black pieces and 2 white pieces in the center of the board.
+    cells.
+    - The game is played on a 8x8 board by default.
+    - The game is played by two players, one with the black pieces (value -1) and one with the white pieces (value +1).
+    Empty cells are represented by 0.
+    - The game starts with 2 black pieces and 2 white pieces in the center of the board.
 
-    Args: mode (tuple): describe the strategy and the player type. 0: Human, >=1: Bot (1: random, 2: positional with
-    TABLE1, 3: positional with TABLE2, 4: absolute, 5: mobility, 6: mixed) size (int, optional): size of the board.
-    Defaults to 8. display (bool, optional): display the board for the bots. Defaults to False. verbose (bool,
-    optional): print the winner. Defaults to False. Returns: int: return code. -1 if black wins, 0 if drawn,
-    1 if white wins
+    The play mode is defined as follows:
+    0 for Human, >=1 for Bot (1: random, 2: positional with TABLE1, 3: positional with TABLE2, 4: absolute, 5: mobility,
+    6: mixed).
+
+    Args:
+        mode (tuple): describe the strategy and the player type. Index 0 is Black, and 1 is White.
+        size (int, optional): size of the board. Defaults to 8.
+        display (bool, optional): display the board for the bots. Defaults to False.
+        verbose (bool, optional): print the winner. Defaults to False.
+
+    Returns:
+        int: return code. -1 if black wins, 0 if tied, 1 if white wins
     """
     error_handling(mode, size)
     board = np.zeros((size, size), dtype=np.int8)
@@ -57,15 +66,15 @@ def error_handling(mode: tuple, size: int) -> int:
     """
     Check if the input parameters are correct
 
-    Args: mode (tuple): describe the strategy and the player type. 0: Human, >=1: Bot (1: random, 2: postional,
-    3: absolute, 4: mobility, 5: mixed). For example: (0, 1) means Human vs Bot with the random strategy size (int):
-    size of the board
+    Args:
+        mode (tuple): describe the strategy and the player type.
+        size (int): size of the board
     """
     if size < 4:
         raise ValueError("Size must be at least 4")
     if size % 2 != 0:
         raise ValueError("Size must be an even number")
-    if not all(0 <= m <= 5 for m in mode):
+    if not all(0 <= m <= 7 for m in mode):
         raise ValueError("Invalid mode")
     return 0
 
@@ -195,12 +204,16 @@ def play(board: np.ndarray, move: tuple, turn: int, adjacent_cells: set, invalid
 
 def strategy(mode: tuple, board: np.ndarray, moves: list, turn: int, adjacent_cells: set, display: bool,
              size: int) -> tuple:
-    """Return the next move
+    """Return the next move based on the strategy.
 
-    Args: mode (tuple): describe the strategy and the player type. 0: Human, >=1: Bot (1: random, 2: postional with
-    TABLE1, 3: postional with TABLE2, 4: absolute, 5: mobility, 6: mixed) board (np.ndarray): board state moves (
-    list): list of possible moves turn (int): current player adjacent_cells (set): set of adjacent cells display (
-    bool): display the board for the bots size (int): size of the board
+    Args:
+        mode (tuple): describe the strategy and the player type.
+        board (np.ndarray): board state.
+        moves (list): list of possible moves.
+        turn (int): current player.
+        adjacent_cells (set): set of adjacent cells.
+        display (bool): display the board for the bots.
+        size (int): size of the board.
 
     Returns:
         tuple: next move
@@ -366,7 +379,7 @@ def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
         return [turn]
     moves, invalid_directions = get_possible_moves(board, adjacent_cells, turn, size)
     length_moves = len(moves)
-    if depth == MAX_DEPTH or size == 0:
+    if depth == MAX_DEPTH or length_moves == 0:
         return [length_moves - len(get_possible_moves(board, adjacent_cells, -turn, size)[0])]
 
     best = -MAX_INT
@@ -408,9 +421,9 @@ def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table
     Returns:
         int: best score, best move
     """
-    if np.sum(board != 0) < 20:
+    if np.sum(board != 0) < 25:
         return s_positional(board, adjacent_cells, turn, depth, table, size, alpha, beta)
-    if np.sum(board != 0) < 50:
+    if np.sum(board != 0) < 45:
         return s_mobility(board, adjacent_cells, turn, depth, size, alpha, beta)
     return s_absolute(board, adjacent_cells, turn, depth, size, alpha, beta)
 
@@ -423,7 +436,7 @@ def get_winner(board: np.ndarray, verbose: bool) -> int:
         verbose (bool): print or not the winner
     
     Returns:
-        int: return code. -1 if black wins, 0 if drawn, 1 if white wins
+        int: return code. -1 if black wins, 0 if tied, 1 if white wins
     """
     black = np.sum(board == -1)
     white = np.sum(board == 1)
