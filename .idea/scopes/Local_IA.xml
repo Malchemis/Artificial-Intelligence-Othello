@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Local_IA" pattern="file[IA - Fondements]:*" />
+</component>
