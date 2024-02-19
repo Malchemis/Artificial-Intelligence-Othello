@@ -1,13 +1,16 @@
 import cv2
 import numpy as np
 
-def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells: set = None, height: int = 800, width: int = 800,
-                background: tuple = (0, 130, 0), display_only: bool = False, last_display: bool = False) -> tuple:
+
+def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells: set = None, height: int = 800,
+                width: int = 800,
+                background: tuple = (0, 130, 0), display_only: bool = False, last_display: bool = False) \
+        -> tuple | None:
     """
     Display the Othello board using OpenCV
 
     Args:
-        size (int): Size of the board
+        size (int): Size of the board.
         board (np.ndarray): Board state of shape (size, size)
         moves (list): List of possible moves
         turn (int): Current turn (-1 for black, 1 for white)
@@ -29,7 +32,8 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
     # Change the background color for the adjacent cells
     if adj_cells is not None:
         for cell in adj_cells:
-            cv2.rectangle(img, (cell[1] * 100, cell[0] * 100), (cell[1] * 100 + 100, cell[0] * 100 + 100), (0, 160, 0), -1)
+            cv2.rectangle(img, (cell[1] * 100, cell[0] * 100), (cell[1] * 100 + 100, cell[0] * 100 + 100), (0, 160, 0),
+                          -1)
 
     # Add pieces (circles)
     for i in range(size):
@@ -47,7 +51,6 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
         else:
             cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (125, 125, 125), -1)
             cv2.circle(img, (y * 100 + 50, x * 100 + 50), 40, (0, 0, 0), 2)
-            
 
     # Add grid lines
     for i in range(0, size):
@@ -68,9 +71,9 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
         return
 
     # Wait for the user to click on a cell
-    x, y = cv2_setMouseCallback(size, img)
+    x, y = cv2_set_mouse_callback(img)
     while (x, y) in moves[:, 0:2]:
-        x, y = cv2_setMouseCallback(size, img)
+        x, y = cv2_set_mouse_callback(img)
 
     cv2.destroyAllWindows()
     for move in moves:
@@ -79,12 +82,12 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
 
     return None
 
-def cv2_setMouseCallback(size: int, img: np.ndarray) -> tuple:
+
+def cv2_set_mouse_callback(img: np.ndarray) -> tuple:
     """
     Set the mouse callback for the OpenCV window
 
     Args:
-        size (int): Size of the board
         img (np.ndarray): Board state of shape (size, size)
 
     Returns:
@@ -92,13 +95,15 @@ def cv2_setMouseCallback(size: int, img: np.ndarray) -> tuple:
     """
     x = -1
     y = -1
-    def mouse_callback(event, x_, y_, flags, param):
+
+    def mouse_callback(event: int, x_: int, y_: int, flags: int, param: any) -> None:
         nonlocal x, y
         if event == cv2.EVENT_LBUTTONDOWN:
             # Representation is transposed of the board
-            y = x_//100
-            x = y_//100
-    cv2.setMouseCallback("Othello", mouse_callback)
+            y = x_ // 100
+            x = y_ // 100
+
+    cv2.setMouseCallback("Othello", mouse_callback, None)
     while True:
         cv2.imshow("Othello", img)
         if x != -1 and y != -1:
