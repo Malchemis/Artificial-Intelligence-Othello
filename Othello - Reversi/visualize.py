@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells: set = None, height: int = 800,
+def cv2_display(size: int, board: np.ndarray, moves: dict, turn: int, adj_cells: set = None, height: int = 800,
                 width: int = 800,
                 background: tuple = (0, 130, 0), display_only: bool = False, last_display: bool = False) \
         -> tuple | None:
@@ -12,7 +12,7 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
     Args:
         size (int): Size of the board.
         board (np.ndarray): Board state of shape (size, size)
-        moves (list): List of possible moves
+        moves (dict): Dict of possible moves
         turn (int): Current turn (-1 for black, 1 for white)
         adj_cells (set, optional): Set of adjacent cells. Defaults to None.
         height (int, optional): Height of the window. Defaults to 800.
