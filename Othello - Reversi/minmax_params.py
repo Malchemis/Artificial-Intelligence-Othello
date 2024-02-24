@@ -1,6 +1,6 @@
 import numpy as np
 
-MAX_DEPTH = 4
+MAX_DEPTH = 7
 MAX_INT = 100000
 
 TABLE1 = np.array(

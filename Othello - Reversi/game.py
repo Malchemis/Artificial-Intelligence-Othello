@@ -2,8 +2,8 @@ from typing import Tuple
 
 import numpy as np
 
-from measure import time_n
 from measure import profile_n
+from measure import time_n
 from next import get_possible_moves, play
 from strategies import strategy
 
@@ -86,7 +86,6 @@ def init_board(board: np.ndarray, size: int = 8) -> None:
     board[size // 2][size // 2 - 1] = -1
 
 
-
 def init_adjacent_cells(adjacent_cells: set, size: int = 8) -> None:
     """
     Set the adjacent cells
@@ -130,8 +129,8 @@ def get_winner(board: np.ndarray, verbose: bool) -> int:
 def main():
     # r_code, r_board, r_moves, r_adj_cells = othello((1, 1), 8, False, False)
     # cv2_display(8, r_board, r_moves, 1, r_adj_cells, display_only=True, last_display=True)
-    time_n(othello, 1000, ((1, 1), 8, False, False))
-    profile_n(othello, 1000, ((1, 1), 8, False, False))
+    time_n(othello, 10, ((2, 2), 8, True, True))
+    profile_n(othello, 10, ((2, 2), 8, True, True))
 
 
 if __name__ == "__main__":

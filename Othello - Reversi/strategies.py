@@ -213,3 +213,19 @@ def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table
     if np.sum(board != 0) < 50:
         return s_mobility(board, adjacent_cells, turn, depth, size, alpha, beta)
     return s_absolute(board, adjacent_cells, turn, depth, size, alpha, beta)
+
+
+def mcts(board: np.ndarray, moves: list, turn: int, adj_cells: set, size: int) -> tuple:
+    """Monte Carlo Tree Search
+
+    Args:
+        board (np.ndarray): board state
+        moves (list): list of possible moves
+        turn (int): current player
+        adj_cells (set): set of adjacent cells
+        size (int): size of the board
+
+    Returns:
+        tuple: next move
+    """
+    pass

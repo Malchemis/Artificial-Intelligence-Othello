@@ -24,7 +24,7 @@ def play(board: np.ndarray, move: tuple, directions: list, turn: int, adjacent_c
             x += dx
             y += dy
             board[x][y] = turn
-        x, y = move[0], move[1]
+        x, y = move
 
     # update adjacent cells
     adjacent_cells.discard(move)
@@ -61,7 +61,7 @@ def get_possible_moves(board: np.ndarray, adjacent_cells: set, turn: int, size: 
 
 
 def is_valid_direction(board: np.ndarray, x: int, y: int, dx: int, dy: int, turn: int, size: int) -> Tuple[bool, int]:
-    """Check if the direction is valid, also return the last cell of the direction
+    """Check if the direction is valid, and return the number of jumps in the direction
 
     Args:
         board (np.ndarray): board state

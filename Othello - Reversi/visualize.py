@@ -76,7 +76,6 @@ def cv2_display(size: int, board: np.ndarray, moves: list, turn: int, adj_cells:
     while True:  # Verify if the cell is a valid move
         for move in moves:
             if (x, y) == move[0]:
-                print(f"Selected move: {x}, {y}")
                 return move
         x, y = cv2_set_mouse_callback(img)
 
