@@ -7,14 +7,14 @@ from next import get_possible_moves, play
 from visualize import cv2_display
 
 
-def strategy(mode: tuple, board: np.ndarray, moves: dict, turn: int, adjacent_cells: set, display: bool,
+def strategy(mode: tuple, board: np.ndarray, moves: list, turn: int, adjacent_cells: set, display: bool,
              size: int) -> tuple:
     """Return the next move based on the strategy.
 
     Args:
         mode (tuple): describe the strategy and the player type.
         board (np.ndarray): board state.
-        moves (dict): list of possible moves.
+        moves (list): list of possible moves.
         turn (int): current player.
         adjacent_cells (set): set of adjacent cells.
         display (bool): display the board for the bots.
@@ -34,7 +34,7 @@ def strategy(mode: tuple, board: np.ndarray, moves: dict, turn: int, adjacent_ce
     if player == 0:
         return s_human(board, moves, adjacent_cells, turn, size)
     if player == 1:
-        return random.choice(list(moves.keys()))
+        return random.choice(moves)
     if player == 2:
         return s_positional(board, adjacent_cells, turn, 0, TABLE1, size, -MAX_INT, MAX_INT)[1]
     if player == 3:
@@ -49,12 +49,12 @@ def strategy(mode: tuple, board: np.ndarray, moves: dict, turn: int, adjacent_ce
         return s_mixed(board, adjacent_cells, turn, 0, TABLE2, size, -MAX_INT, MAX_INT)[1]
 
 
-def s_human(board: np.ndarray, moves: dict, adj_cells, turn, size: int) -> tuple:
+def s_human(board: np.ndarray, moves: list, adj_cells: set, turn: int, size: int) -> tuple:
     """Display the board using cv2 and return a move from the user
 
     Args:
         board (np.ndarray): board state
-        moves (dict): Dict of possible moves
+        moves (list): list of possible moves
         adj_cells (set): set of adjacent cells
         turn (int): current player
         size (int): size of the board
@@ -83,10 +83,8 @@ def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
     Returns:
         tuple: best score, best move
     """
-    if depth == MAX_DEPTH or len(adjacent_cells) == 0:
-        return [np.sum(board == turn) - np.sum(board == -turn)]
-    moves = get_possible_moves(board, adjacent_cells, turn, size)
-    if len(moves) == 0:
+    # End of the recursion : Max depth reached or no more possible moves
+    if depth == MAX_DEPTH or len(moves := get_possible_moves(board, adjacent_cells, turn, size)) == 0:
         return [np.sum(board == turn) - np.sum(board == -turn)]
 
     best = -MAX_INT
@@ -94,7 +92,7 @@ def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
     for move in moves:
         board_copy = board.copy()
         adj_cells = adjacent_cells.copy()
-        play(board_copy, move, moves[move], turn, adj_cells, size)
+        play(board_copy, move[0], move[1], turn, adj_cells, size)
         score = -s_absolute(board_copy, adj_cells, -turn, depth + 1, size, -beta, -alpha)[0]
         if score == best:
             best_moves.append(move)
@@ -126,17 +124,15 @@ def s_positional(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, 
     Returns:
         tuple: best score, best move
     """
-    if depth == MAX_DEPTH or len(adjacent_cells) == 0:
+    if depth == MAX_DEPTH or len(moves := get_possible_moves(board, adjacent_cells, turn, size)) == 0:
         return [np.sum(table[np.where(board == turn)]) - np.sum(table[np.where(board == -turn)])]
-    moves = get_possible_moves(board, adjacent_cells, turn, size)
-    if len(moves) == 0:
-        return [np.sum(table[np.where(board == turn)]) - np.sum(table[np.where(board == -turn)])]
+
     best = -MAX_INT
     best_moves = []
     for move in moves:
         board_copy = board.copy()
         adj_cells = adjacent_cells.copy()
-        play(board_copy, move, moves[move], turn, adj_cells, size)
+        play(board_copy, move[0], move[1], turn, adj_cells, size)
         score = -s_positional(board_copy, adj_cells, -turn, depth + 1, table, size, -beta, -alpha)[0]
         if score == best:
             best_moves.append(move)
@@ -168,8 +164,6 @@ def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
     Returns:
         int: best score, best move
     """
-    if len(adjacent_cells) == 0:
-        return [turn]
     moves = get_possible_moves(board, adjacent_cells, turn, size)
     length_moves = len(moves)
     if depth == MAX_DEPTH or length_moves == 0:
@@ -180,7 +174,7 @@ def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
     for move in moves:
         board_copy = board.copy()
         adj_cells = adjacent_cells.copy()
-        play(board_copy, move, moves[move], turn, adj_cells, size)
+        play(board_copy, move[0], move[1], turn, adj_cells, size)
         score = -s_mobility(board_copy, adj_cells, -turn, depth + 1, size, -beta, -alpha)[0]
         if score == best:
             best_moves.append(move)
@@ -216,6 +210,6 @@ def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table
     """
     if np.sum(board != 0) < 25:
         return s_positional(board, adjacent_cells, turn, depth, table, size, alpha, beta)
-    if np.sum(board != 0) < 45:
+    if np.sum(board != 0) < 50:
         return s_mobility(board, adjacent_cells, turn, depth, size, alpha, beta)
     return s_absolute(board, adjacent_cells, turn, depth, size, alpha, beta)

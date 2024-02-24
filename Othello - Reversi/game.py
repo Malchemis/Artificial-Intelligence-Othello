@@ -7,8 +7,6 @@ from measure import profile_n
 from next import get_possible_moves, play
 from strategies import strategy
 
-DIRECTIONS = {(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)}
-
 
 def othello(mode: tuple, size: int = 8, display: bool = False, verbose: bool = False) \
         -> Tuple[int, np.ndarray, list, set]:
@@ -34,17 +32,16 @@ def othello(mode: tuple, size: int = 8, display: bool = False, verbose: bool = F
         int: return code. -1 if black wins, 0 if tied, 1 if white wins
     """
     error_handling(mode, size)
-    board = np.zeros((size, size), dtype=np.int8)
+    board = np.zeros((size, size))
     adjacent_cells = set()
+
     turn = -1  # Black starts
     init_board(board)  # set the starting positions
     init_adjacent_cells(adjacent_cells)  # set the adjacent cells
-    moves = []
 
-    while len(adjacent_cells) >= 0:
+    while True:
         moves = get_possible_moves(board, adjacent_cells, turn, size)  # set the possible moves
-
-        if len(moves) == 0:
+        if not moves:
             # verify if the other player can play
             if len(get_possible_moves(board, adjacent_cells, -turn, size)) == 0:
                 break
@@ -52,7 +49,7 @@ def othello(mode: tuple, size: int = 8, display: bool = False, verbose: bool = F
             continue
 
         next_move = strategy(mode, board, moves, turn, adjacent_cells, display, size)
-        play(board, next_move, moves[next_move], turn, adjacent_cells, size)
+        play(board, next_move[0], next_move[1], turn, adjacent_cells, size)
         turn *= -1
 
     return get_winner(board, verbose), board, moves, adjacent_cells
@@ -87,6 +84,7 @@ def init_board(board: np.ndarray, size: int = 8) -> None:
     board[size // 2][size // 2] = 1
     board[size // 2 - 1][size // 2] = -1
     board[size // 2][size // 2 - 1] = -1
+
 
 
 def init_adjacent_cells(adjacent_cells: set, size: int = 8) -> None:
