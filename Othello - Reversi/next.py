@@ -84,25 +84,6 @@ def SE(x):
     return S(E(x))
 
 
-def associate_dir_to_ij(direction):
-    if direction == N:
-        return -1, 0
-    if direction == S:
-        return 1, 0
-    if direction == E:
-        return 0, 1
-    if direction == W:
-        return 0, -1
-    if direction == NW:
-        return -1, -1
-    if direction == NE:
-        return -1, 1
-    if direction == SW:
-        return 1, -1
-    if direction == SE:
-        return 1, 1
-
-
 def opposite_dir(direction):
     if direction == N:
         return S

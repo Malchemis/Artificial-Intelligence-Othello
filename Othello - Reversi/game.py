@@ -9,31 +9,26 @@ from minmax_params import Strategy  # Enums for the strategies
 from strategies import strategy
 
 
-def othello(mode: tuple, size: int = 8, max_depth: int = 4, display: bool = False, verbose: bool = False) \
-        -> tuple[int, int, int, list]:
+def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
+            display: bool = False, verbose: bool = False) -> tuple[int, int, int]:
     """
-    Handles the game logic of Othello. We keep track of the board, the turn, the possible moves and the adjacent
-    cells.
-    - The game is played on a 8x8 board by default.
-    - The game is played by two players, one with the black pieces (value -1) and one with the white pieces (value +1).
-    Empty cells are represented by 0.
-    - The game starts with 2 black pieces and 2 white pieces in the center of the board.
+    Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
+    pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces
+    in the center of the board.
 
-    The play mode is defined as follows:
-    0 for Human, >=1 for Bot (1: random, 2: positional with TABLE1, 3: positional with TABLE2, 4: absolute, 5: mobility,
-    6: mixed with TABLE1, 7: mixed with TABLE2)
 
     Args:
-        mode (tuple): describe the strategy and the player type. Index 0 is Black, and 1 is White.
+        minimax_mode (tuple): describe the strategy and the player type. First element is Black, and second is White.
+        mode (tuple): describe the strategy and the player type. First element is Black, and second is White.
         size (int, optional): size of the board. Defaults to 8.
         max_depth (int, optional): max depth of the search tree. Defaults to 4.
         display (bool, optional): display the board for the bots. Defaults to False.
         verbose (bool, optional): print the winner. Defaults to False.
 
     Returns:
-        int: return code. -1 if black wins, 0 if tied, 1 if white wins
+        tuple[int, int, int]: return code, white pieces, black pieces
     """
-    error_handling(mode, size)
+    error_handling(minimax_mode, mode, size)
     white_pieces, black_pieces = init_bit_board(size)  # set the bit board
     turn = -1  # Black starts
 
@@ -53,20 +48,21 @@ def othello(mode: tuple, size: int = 8, max_depth: int = 4, display: bool = Fals
             turn *= -1
             continue  # skip the current turn
 
-        next_move = strategy(mode, white_pieces, black_pieces, moves, turn, display, size, max_depth)
+        next_move = strategy(minimax_mode, mode, white_pieces, black_pieces, moves, turn, display, size, max_depth)
         black_pieces, white_pieces = make_move(own, enemy, next_move, directions, size)
         # swap the players after the move
         if turn == 1:
             white_pieces, black_pieces = black_pieces, white_pieces
         turn *= -1
-    return get_winner(white_pieces, black_pieces, verbose), white_pieces, black_pieces, moves
+    return get_winner(white_pieces, black_pieces, verbose), white_pieces, black_pieces
 
 
-def error_handling(mode: tuple, size: int) -> int:
+def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:
     """
     Check if the input parameters are correct
 
     Args:
+        minimax_mode (tuple): describe the version to use for the minimax algorithm.
         mode (tuple): describe the strategy and the player type.
         size (int): size of the board
     """
@@ -74,8 +70,12 @@ def error_handling(mode: tuple, size: int) -> int:
         raise ValueError("Size must be at least 4")
     if size % 2 != 0:
         raise ValueError("Size must be an even number")
+
     if not all(Strategy.HUMAN <= m <= Strategy.MIXED_TABLE2 for m in mode):
         raise NotImplementedError("Invalid mode")
+    if not all(Strategy.MINIMAX <= m <= Strategy.NEGAMAX_ALPHA_BETA for m in minimax_mode):
+        raise NotImplementedError("Invalid minimax mode")
+
     if size != 8 and any(mode) in [Strategy.POSITIONAL_TABLE1, Strategy.POSITIONAL_TABLE2, Strategy.MIXED_TABLE1,
                                    Strategy.MIXED_TABLE2]:
         raise ValueError("Size must be 8 to use heuristic tables (TABLE1, TABLE2 are used by {2, 3, 6, 7})")
@@ -120,14 +120,15 @@ def get_winner(white_pieces: int, black_pieces: int, verbose: bool) -> int:
 def main():
     with open("F:/Workspaces/PyCharm/IA - Fondements/Othello - Reversi/config.yaml", "r") as file:
         config = yaml.safe_load(file)
+    minimax_mode = (int(config["minimax_mode"][0]), int(config["minimax_mode"][1]))
     mode = (int(config["mode"][0]), int(config["mode"][1]))
     size = int(config["size"])
     max_depth = int(config["max_depth"])
     display = config["display"]
     verbose = config["verbose"]
 
-    time_n(othello, config["n"], (mode, size, max_depth, display, verbose))
-    profile_n(othello, config["n"], (mode, size, max_depth, display, verbose))
+    time_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose))
+    profile_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose))
 
 
 if __name__ == "__main__":

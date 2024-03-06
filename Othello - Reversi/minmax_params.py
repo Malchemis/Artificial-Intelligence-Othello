@@ -31,6 +31,13 @@ TABLE2 = np.array(
 
 # Enums for the strategies
 class Strategy:
+    # Minimax algorithms
+    MINIMAX = 0
+    ALPHABETA = 1
+    NEGAMAX = 2
+    NEGAMAX_ALPHA_BETA = 3
+
+    # Mode for the player
     HUMAN = 0
     RANDOM = 1
     POSITIONAL_TABLE1 = 2
@@ -39,3 +46,6 @@ class Strategy:
     MOBILITY = 5
     MIXED_TABLE1 = 6
     MIXED_TABLE2 = 7
+
+    def __init__(self):
+        pass

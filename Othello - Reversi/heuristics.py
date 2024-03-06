@@ -33,6 +33,8 @@ def absolute(own: int, enemy: int, size=None, table=None) -> signedinteger[Any]:
     Args:
         own (int): a bit board of the current player
         enemy (int): a bit board of the other player
+        size (int): not used here. It is only to match the signature of the other heuristics
+        table (np.ndarray): not used here. It is only to match the signature of the other heuristics
     """
     return cell_count(own) - cell_count(enemy)
 
@@ -44,6 +46,7 @@ def mobility(own: int, enemy: int, size: int, table=None) -> signedinteger[Any]:
         own (int): a bit board of the current player
         enemy (int): a bit board of the other player
         size (int): size of the board
+        table (np.ndarray): not used here. It is only to match the signature of the other heuristics
     """
     own_moves, _ = generate_moves(own, enemy, size)
     enemy_moves, _ = generate_moves(enemy, own, size)
