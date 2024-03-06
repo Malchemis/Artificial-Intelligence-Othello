@@ -1,86 +1,122 @@
 from typing import Tuple
 
-import numpy as np
 
-DIRECTIONS = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
+def generate_moves(own, enemy, size) -> Tuple[list, dict]:
+    """Generate the possible moves for the current player using bitwise operations"""
+    empty = ~(own | enemy)  # Empty squares (not owned by either player)
+    unique_moves = []  # List of possible moves
+    dir_jump = {}  # Dictionary of moves and the number of pieces that can be captured in each direction
 
+    # Generate moves in all eight directions
+    for direction in [N, S, E, W, NW, NE, SW, SE]:
+        # We get the pieces that are next to an enemy piece in the direction
+        count = 0
+        victims = direction(own) & enemy
+        if not victims:
+            continue
 
-def play(board: np.ndarray, move: tuple, directions: list, turn: int, adjacent_cells: set, size: int) -> None:
-    """Play the move
+        # We keep getting the pieces that are next to an enemy piece in the direction
+        for _ in range(size):
+            count += 1
+            next_piece = direction(victims) & enemy
+            if not next_piece:
+                break
+            victims |= next_piece
 
-    Args:
-        board (np.ndarray): board state
-        move (tuple): move  / key x, y of the dictionary of moves
-        directions (list): list of directions (values of the dictionary of moves)
-        turn (int): current player
-        adjacent_cells (set): set of adjacent cells
-        size (int): size of the board
-    """
-    x, y = move
-    board[x][y] = turn
+        # We get the pieces that can be captured in the direction
+        captures = direction(victims) & empty
+        # if there are multiple pieces in captures, we separate them and add them to the set
+        while captures:
+            capture = captures & -captures  # get the least significant bit
+            captures ^= capture  # remove the lsb
+            if capture not in dir_jump:
+                unique_moves.append(capture)
+                dir_jump[capture] = []
+            dir_jump[capture].append((direction, count))
 
-    for n_jump, dx, dy in directions:
-        for _ in range(n_jump):
-            x += dx
-            y += dy
-            board[x][y] = turn
-        x, y = move
-
-    # update adjacent cells
-    adjacent_cells.discard(move)
-    for dx, dy in DIRECTIONS:
-        new_x, new_y = move[0] + dx, move[1] + dy
-        if 0 <= new_x < size and 0 <= new_y < size and board[new_x][new_y] == 0:
-            adjacent_cells.add((new_x, new_y))
-
-
-def get_possible_moves(board: np.ndarray, adjacent_cells: set, turn: int, size: int) -> list:
-    """
-    Get the possible moves of the current player
-
-    Args:
-        board (np.ndarray): board state
-        adjacent_cells (set): set of adjacent cells
-        turn (int): current player
-        size (int): size of the board
-
-    Returns:
-        list: list of possible moves with key (x, y) and value list of directions
-    """
-    possible_moves = []
-    for x, y in adjacent_cells:
-        directions = []
-        for dx, dy in DIRECTIONS:
-            is_valid, n_jump = is_valid_direction(board, x, y, dx, dy, turn, size)
-            if is_valid:
-                directions.append((n_jump, dx, dy))
-        if directions:
-            possible_moves.append(((x, y), directions))
-
-    return possible_moves
+    return unique_moves, dir_jump
 
 
-def is_valid_direction(board: np.ndarray, x: int, y: int, dx: int, dy: int, turn: int, size: int) -> Tuple[bool, int]:
-    """Check if the direction is valid, and return the number of jumps in the direction
+def make_move(own, enemy, move_to_play, directions, size):
+    """Make the move and update the board using bitwise operations."""
+    for direction, count in directions[move_to_play]:
+        victims = move_to_play  # Init the victims with the move to play
 
-    Args:
-        board (np.ndarray): board state
-        x (int): x coordinate
-        y (int): y coordinate
-        dx (int): x direction
-        dy (int): y direction
-        turn (int): current player
-        size (int): size of the board
+        op_dir = opposite_dir(direction)  # opposite direction since we go from the move to play to the captured pieces
+        for _ in range(count):
+            victims |= (op_dir(victims) & enemy)
+        own ^= victims
+        enemy ^= victims & ~move_to_play
+    # because of the XOR, the move to play which is considered a victim can be returned a pair number of times
+    own |= move_to_play
+    return own, enemy
 
-    Returns:
-        bool: True if the direction is valid
-        int: number of jumps in the direction
-    """
-    x += dx
-    y += dy
-    n_jump = 0
-    while 0 <= x < size and 0 <= y < size and board[x][y] == -turn:
-        x += dx
-        y += dy
-        n_jump += 1
-    return 0 <= x < size and 0 <= y < size and board[x][y] == turn and n_jump > 0, n_jump
+
+def N(x):
+    return (x & 0x00ffffffffffffff) << 8
+
+
+def S(x):
+    return (x & 0xffffffffffffff00) >> 8
+
+
+def E(x):
+    return (x & 0x7f7f7f7f7f7f7f7f) << 1
+
+
+def W(x):
+    return (x & 0xfefefefefefefefe) >> 1
+
+
+def NW(x):
+    return N(W(x))
+
+
+def NE(x):
+    return N(E(x))
+
+
+def SW(x):
+    return S(W(x))
+
+
+def SE(x):
+    return S(E(x))
+
+
+def associate_dir_to_ij(direction):
+    if direction == N:
+        return -1, 0
+    if direction == S:
+        return 1, 0
+    if direction == E:
+        return 0, 1
+    if direction == W:
+        return 0, -1
+    if direction == NW:
+        return -1, -1
+    if direction == NE:
+        return -1, 1
+    if direction == SW:
+        return 1, -1
+    if direction == SE:
+        return 1, 1
+
+
+def opposite_dir(direction):
+    if direction == N:
+        return S
+    if direction == S:
+        return N
+    if direction == E:
+        return W
+    if direction == W:
+        return E
+    if direction == NW:
+        return SE
+    if direction == NE:
+        return SW
+    if direction == SW:
+        return NE
+    if direction == SE:
+        return NW

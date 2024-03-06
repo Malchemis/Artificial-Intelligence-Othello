@@ -1,99 +1,113 @@
 import random
-
 import numpy as np
 
-from minmax_params import TABLE1, TABLE2, MAX_DEPTH, MAX_INT
-from next import get_possible_moves, play
+from minmax_params import TABLE1, TABLE2, MAX_INT, Strategy
+
+from next import generate_moves, make_move
+from bitwise_func import cell_count
+
+from heuristics import positional, mobility, absolute
+
 from visualize import cv2_display
 
+MAX_DEPTH = 20
 
-def strategy(mode: tuple, board: np.ndarray, moves: list, turn: int, adjacent_cells: set, display: bool,
-             size: int) -> tuple:
+
+def strategy(mode: tuple, white_pieces: int, black_pieces: int, moves: list, turn: int, display: bool,
+             size: int, max_depth: int) -> tuple:
     """Return the next move based on the strategy.
 
     Args:
         mode (tuple): describe the strategy and the player type.
-        board (np.ndarray): board state.
+        white_pieces (int): a bit board of the white pieces.
+        black_pieces (int): a bit board of the black pieces.
         moves (list): list of possible moves.
         turn (int): current player.
-        adjacent_cells (set): set of adjacent cells.
         display (bool): display the board for the bots.
         size (int): size of the board.
+        max_depth (int): max depth of the search.
 
     Returns:
         tuple: next move
     """
+    global MAX_DEPTH
+    MAX_DEPTH = max_depth
+
     if display:
-        cv2_display(size, board, moves, turn, adjacent_cells, display_only=True)
+        cv2_display(size, white_pieces, black_pieces, moves, turn, display_only=True)
 
-    if turn == -1:
-        player = mode[0]
-    else:
-        player = mode[1]
+    player = mode[0] if turn == -1 else mode[1]
 
-    if player == 0:
-        return s_human(board, moves, adjacent_cells, turn, size)
-    if player == 1:
+    if player == Strategy.HUMAN:
+        return s_human(white_pieces, black_pieces, moves, turn, size)
+
+    if player == Strategy.RANDOM:
         return random.choice(moves)
-    if player == 2:
-        return s_positional(board, adjacent_cells, turn, 0, TABLE1, size, -MAX_INT, MAX_INT)[1]
-    if player == 3:
-        return s_positional(board, adjacent_cells, turn, 0, TABLE2, size, -MAX_INT, MAX_INT)[1]
-    if player == 4:
-        return s_absolute(board, adjacent_cells, turn, 0, size, -MAX_INT, MAX_INT)[1]
-    if player == 5:
-        return s_mobility(board, adjacent_cells, turn, 0, size, -MAX_INT, MAX_INT)[1]
-    if player == 6:
-        return s_mixed(board, adjacent_cells, turn, 0, TABLE1, size, -MAX_INT, MAX_INT)[1]
-    if player == 7:
-        return s_mixed(board, adjacent_cells, turn, 0, TABLE2, size, -MAX_INT, MAX_INT)[1]
+
+    if player == Strategy.POSITIONAL_TABLE1:
+        return negamax_alpha_beta(white_pieces, black_pieces, turn, 0, size, -MAX_INT, MAX_INT,
+                                  heuristic=positional, table=TABLE1)[1]
+    if player == Strategy.POSITIONAL_TABLE2:
+        return negamax_alpha_beta(white_pieces, black_pieces, turn, 0, size, -MAX_INT, MAX_INT,
+                                  heuristic=positional, table=TABLE2)[1]
+
+    if player == Strategy.ABSOLUTE:
+        return negamax_alpha_beta(white_pieces, black_pieces, turn, 0, size, -MAX_INT, MAX_INT,
+                                  heuristic=absolute)[1]
+
+    if player == Strategy.MOBILITY:
+        return negamax_alpha_beta(white_pieces, black_pieces, turn, 0, size, -MAX_INT, MAX_INT,
+                                  heuristic=mobility)[1]
+
+    if player == Strategy.MIXED_TABLE1:
+        return s_mixed(white_pieces, black_pieces, turn, 0, size, -MAX_INT, MAX_INT, TABLE1)[1]
+    if player == Strategy.MIXED_TABLE2:
+        return s_mixed(white_pieces, black_pieces, turn, 0, size, -MAX_INT, MAX_INT, TABLE2)[1]
 
 
-def s_human(board: np.ndarray, moves: list, adj_cells: set, turn: int, size: int) -> tuple:
-    """Display the board using cv2 and return a move from the user
-
-    Args:
-        board (np.ndarray): board state
-        moves (list): list of possible moves
-        adj_cells (set): set of adjacent cells
-        turn (int): current player
-        size (int): size of the board
-
-    Returns:
-        tuple: next move
-    """
-    return cv2_display(size, board, moves, turn, adj_cells)
+def s_human(white_pieces: int, black_pieces: int, moves: list, turn: int, size: int) -> tuple:
+    """Display the board using cv2 and return a move from the user"""
+    return cv2_display(size, white_pieces, black_pieces, moves, turn)
 
 
-def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, size: int, alpha: int,
-               beta: int) -> tuple | list:
+def negamax_alpha_beta(white_pieces: int, black_pieces: int, turn: int, depth: int, size: int, alpha: int,
+                       beta: int, heuristic=None, table=None) -> tuple | list:
     """
     Looks at the number of pieces flipped (tries to maximize (player's pieces - opponent's pieces)). MinMax (NegaMax)
     algorithm with alpha-beta pruning.
 
     Args:
-        board (np.ndarray): board state
-        adjacent_cells (set): set of adjacent cells
+        white_pieces (int): a bit board of the white player
+        black_pieces (int): a bit board of the black player
         turn (int): current player
         depth (int): depth of the search
         size (int): size of the board
         alpha (int): alpha value
         beta (int): beta value
+        heuristic : function to use to evaluate a board
+        table : table of values for the heuristic
 
     Returns:
         tuple: best score, best move
     """
+    own, enemy = (white_pieces, black_pieces) if turn == 1 else (black_pieces, white_pieces)
+
     # End of the recursion : Max depth reached or no more possible moves
-    if depth == MAX_DEPTH or len(moves := get_possible_moves(board, adjacent_cells, turn, size)) == 0:
-        return [np.sum(board == turn) - np.sum(board == -turn)]
+    if depth == MAX_DEPTH:
+        return heuristic(own, enemy, size, table), None
+    moves, directions = generate_moves(own, enemy, size)
+    if not moves:
+        return heuristic(own, enemy, size, table), None
 
     best = -MAX_INT
     best_moves = []
     for move in moves:
-        board_copy = board.copy()
-        adj_cells = adjacent_cells.copy()
-        play(board_copy, move[0], move[1], turn, adj_cells, size)
-        score = -s_absolute(board_copy, adj_cells, -turn, depth + 1, size, -beta, -alpha)[0]
+        own, enemy = make_move(own, enemy, move, directions, size)
+        if turn == 1:  # white plays as own
+            score = -negamax_alpha_beta(own, enemy, -turn, depth + 1, size, -beta, -alpha, heuristic, table)[0]
+        else:  # black plays as own
+            score = -negamax_alpha_beta(enemy, own, -turn, depth + 1, size, -beta, -alpha, heuristic, table)[0]
+
         if score == best:
             best_moves.append(move)
         if score > best:
@@ -107,125 +121,28 @@ def s_absolute(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, si
     return best, best_move
 
 
-def s_positional(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table: np.ndarray, size: int,
-                 alpha: int, beta: int) -> tuple | list:
-    """Return the best move using heuristics. MinMax (NegaMax) algorithm with alpha-beta pruning
-
-    Args:
-        board (np.ndarray): board state
-        adjacent_cells (set): set of adjacent cells
-        turn (int): current player
-        depth (int): depth of the search
-        table (np.ndarray): table of adjacent cells
-        size (int): size of the board
-        alpha (int): alpha value
-        beta (int): beta value
-
-    Returns:
-        tuple: best score, best move
-    """
-    if depth == MAX_DEPTH or len(moves := get_possible_moves(board, adjacent_cells, turn, size)) == 0:
-        return [np.sum(table[np.where(board == turn)]) - np.sum(table[np.where(board == -turn)])]
-
-    best = -MAX_INT
-    best_moves = []
-    for move in moves:
-        board_copy = board.copy()
-        adj_cells = adjacent_cells.copy()
-        play(board_copy, move[0], move[1], turn, adj_cells, size)
-        score = -s_positional(board_copy, adj_cells, -turn, depth + 1, table, size, -beta, -alpha)[0]
-        if score == best:
-            best_moves.append(move)
-        if score > best:
-            best = score
-            best_moves = [move]
-            if best > alpha:
-                alpha = best
-                if alpha >= beta:
-                    break
-    best_move = random.choice(best_moves)
-    return best, best_move
-
-
-def s_mobility(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, size: int, alpha: int,
-               beta: int) -> tuple | list:
-    """Return the best move using the mobility. Maximize the number of possible moves for the current player,
-    and minimize the number of possible moves for the other player. MinMax (NegaMax) algorithm with alpha-beta pruning
-
-    Args:
-        board (np.ndarray): board state
-        adjacent_cells (set): set of adjacent cells
-        turn (int): current player
-        depth (int): depth of the search
-        size (int): size of the board
-        alpha (int): alpha value
-        beta (int): beta value
-
-    Returns:
-        int: best score, best move
-    """
-    moves = get_possible_moves(board, adjacent_cells, turn, size)
-    length_moves = len(moves)
-    if depth == MAX_DEPTH or length_moves == 0:
-        return [length_moves - len(get_possible_moves(board, adjacent_cells, -turn, size))]
-
-    best = -MAX_INT
-    best_moves = []
-    for move in moves:
-        board_copy = board.copy()
-        adj_cells = adjacent_cells.copy()
-        play(board_copy, move[0], move[1], turn, adj_cells, size)
-        score = -s_mobility(board_copy, adj_cells, -turn, depth + 1, size, -beta, -alpha)[0]
-        if score == best:
-            best_moves.append(move)
-        if score > best:
-            best = score
-            best_moves = [move]
-            if best > alpha:
-                alpha = best
-                if alpha >= beta:
-                    break
-    best_move = random.choice(best_moves)
-    return best, best_move
-
-
-def s_mixed(board: np.ndarray, adjacent_cells: set, turn: int, depth: int, table: np.ndarray, size: int, alpha: int,
-            beta: int) -> tuple:
+def s_mixed(white_pieces: int, black_pieces: int, turn: int, depth: int, size: int, alpha: int, beta: int,
+            table: np.ndarray) -> tuple:
     """Return the best move using phases. First phase (0-20) we use positional, then mobility, then absolute (
     44-64). The idea is we get a positional advantage early, then we try to make it hard for the opponent to play,
     then we maximize the number of pieces flipped
 
     Args:
-        board (np.ndarray): board state
-        adjacent_cells (set): set of adjacent cells
+        white_pieces (int): a bit board of the white player
+        black_pieces (int): a bit board of the black player
         turn (int): current player
         depth (int): depth of the search
-        table (np.ndarray): table of values
         size (int): size of the board
         alpha (int): alpha value
         beta (int): beta value
+        table (np.ndarray): table of values for the heuristic
 
     Returns:
         int: best score, best move
     """
-    if np.sum(board != 0) < 25:
-        return s_positional(board, adjacent_cells, turn, depth, table, size, alpha, beta)
-    if np.sum(board != 0) < 50:
-        return s_mobility(board, adjacent_cells, turn, depth, size, alpha, beta)
-    return s_absolute(board, adjacent_cells, turn, depth, size, alpha, beta)
-
-
-def mcts(board: np.ndarray, moves: list, turn: int, adj_cells: set, size: int) -> tuple:
-    """Monte Carlo Tree Search
-
-    Args:
-        board (np.ndarray): board state
-        moves (list): list of possible moves
-        turn (int): current player
-        adj_cells (set): set of adjacent cells
-        size (int): size of the board
-
-    Returns:
-        tuple: next move
-    """
-    pass
+    count = cell_count(white_pieces | black_pieces)
+    if count < 28:
+        return negamax_alpha_beta(white_pieces, black_pieces, turn, depth, size, alpha, beta, positional, table)
+    if count < 48:
+        return negamax_alpha_beta(white_pieces, black_pieces, turn, depth, size, alpha, beta, mobility)
+    return negamax_alpha_beta(white_pieces, black_pieces, turn, depth, size, alpha, beta, absolute)
