@@ -10,7 +10,7 @@ from strategies import strategy
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
-            display: bool = False, verbose: bool = False) -> tuple[int, int, int]:
+            display: bool = False, verbose: bool = False) -> tuple[int, int, int, int]:
     """
     Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
     pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces
@@ -29,32 +29,27 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         tuple[int, int, int]: return code, white pieces, black pieces
     """
     error_handling(minimax_mode, mode, size)
-    white_pieces, black_pieces = init_bit_board(size)  # set the bit board
+    enemy, own = init_bit_board(size)  # set the bit board
     turn = -1  # Black starts
-
     while True:
         if verbose == 2:
-            print("Turn: " + ("Black" if turn == -1 else "White"))
-            print_board(white_pieces, black_pieces, size)
-            print_pieces(white_pieces, size)
-            print_pieces(black_pieces, size)
+            status(own, enemy, size, turn)
 
-        own, enemy = (black_pieces, white_pieces) if turn == -1 else (white_pieces, black_pieces)
         moves, directions = generate_moves(own, enemy, size)
 
-        if not moves:  # verify if the other player can play
+        if not moves:  # Verify if the other player can play
             if len(generate_moves(enemy, own, size)[0]) == 0:
-                break  # end the game loop
+                break  # End the game loop
+            own, enemy = enemy, own  # swap the players
             turn *= -1
-            continue  # skip the current turn
+            continue  # Skip the current turn
 
-        next_move = strategy(minimax_mode, mode, white_pieces, black_pieces, moves, turn, display, size, max_depth)
-        black_pieces, white_pieces = make_move(own, enemy, next_move, directions, size)
-        # swap the players after the move
-        if turn == 1:
-            white_pieces, black_pieces = black_pieces, white_pieces
+        next_move = strategy(minimax_mode, mode, own, enemy, moves, turn, display, size, max_depth)  # Get the next move
+        enemy, own = make_move(own, enemy, next_move, directions, size)  # Play and Swap the players
         turn *= -1
-    return get_winner(white_pieces, black_pieces, verbose), white_pieces, black_pieces
+
+    white_pieces, black_pieces = (own, enemy) if turn == 1 else (enemy, own)
+    return get_winner(white_pieces, black_pieces, verbose), own, enemy, turn
 
 
 def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:
@@ -115,6 +110,17 @@ def get_winner(white_pieces: int, black_pieces: int, verbose: bool) -> int:
     if verbose:
         print("Draw" + "(" + str(black) + " vs " + str(white) + ")")
     return 0
+
+
+def status(own: int, enemy: int, size: int, turn: int) -> None:
+    print("Turn: " + ("Black" if turn == -1 else "White"))
+    white_pieces, black_pieces = (own, enemy) if turn == 1 else (enemy, own)
+    print_board(white_pieces, black_pieces, size)
+    print_pieces(white_pieces, size)
+    print_pieces(black_pieces, size)
+    print(f"{white_pieces:064b}")
+    print(f"{black_pieces:064b}")
+    print(white_pieces | black_pieces)
 
 
 def main():

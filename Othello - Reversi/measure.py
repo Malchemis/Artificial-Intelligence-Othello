@@ -18,7 +18,7 @@ def profile_n(func, n: int, params: tuple) -> None:
     pr = cProfile.Profile()
     pr.enable()
     for _ in tqdm(range(n), desc="Progress", unit="iteration"):
-        _, _, _ = func(*params)
+        _, _, _, _ = func(*params)
     pr.disable()
     # sort by cumulative time
     ps = pstats.Stats(pr).sort_stats('cumulative')
@@ -38,7 +38,7 @@ def time_n(func, n: int, params: tuple) -> None:
     offsets = []
     for _ in tqdm(range(n), desc="Progress", unit="iteration"):
         onsets.append(time.perf_counter())
-        code, board, moves = func(*params)
+        code, own, enemy, turn = func(*params)
         offsets.append(time.perf_counter())
         wins.append(code)
 

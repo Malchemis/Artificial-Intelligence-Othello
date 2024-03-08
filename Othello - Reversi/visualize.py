@@ -10,23 +10,25 @@ WHITE = (255, 255, 255)
 GREY = (125, 125, 125)
 
 
-def cv2_display(size: int, white: int, black: int, moves: list, turn: int,
-                display_only: bool = False, last_display: bool = False) -> tuple | None:
+def cv2_display(size: int, own: int, enemy: int, moves: list, turn: int,
+                display_only: bool = False, last_display: bool = False) -> int | None:
     """
     Display the Othello board using OpenCV
 
     Args:
         size (int): Size of the board.
-        white (int): a bit board of the current player
-        black (int): a bit board of the other player
+        own (int): a bit board of the current player
+        enemy (int): a bit board of the opponent
         moves (list): List of possible moves
         turn (int): Current turn (-1 for black, 1 for white)
         display_only (bool, optional): Flag to indicate if only display is required. Defaults to False.
         last_display (bool, optional): Flag to indicate if this is the last display. Defaults to False.
 
     Returns:
-        tuple: The selected move coordinates (x, y)
+        int: The int corresponding to the selected move coordinates (x, y)
     """
+    white, black = (own, enemy) if turn == 1 else (enemy, own)
+
     img = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
 
     # Set the background color
@@ -64,9 +66,10 @@ def cv2_display(size: int, white: int, black: int, moves: list, turn: int,
 
     if display_only:
         if last_display:
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            exit(0)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                cv2.destroyAllWindows()
+                exit(0)
         return None
 
     # Wait for the user to click on a cell
