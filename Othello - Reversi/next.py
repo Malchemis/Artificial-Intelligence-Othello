@@ -1,7 +1,4 @@
-from typing import Tuple
-
-
-def generate_moves(own, enemy, size) -> Tuple[list, dict]:
+def generate_moves(own, enemy, size) -> tuple[list, dict]:
     """Generate the possible moves for the current player using bitwise operations"""
     empty = ~(own | enemy)  # Empty squares (not owned by either player)
     unique_moves = []  # List of possible moves
@@ -52,12 +49,14 @@ def make_move(own, enemy, move_to_play, directions, size):
     return own, enemy
 
 
+# ------------------------------------ DIRECTIONS ------------------------------------ #
+# Orthogonal directions
 def N(x):
-    return (x & 0x00ffffffffffffff) << 8
+    return (x & 0xffffffffffffff00) >> 8
 
 
 def S(x):
-    return (x & 0xffffffffffffff00) >> 8
+    return (x & 0x00ffffffffffffff) << 8
 
 
 def E(x):
@@ -68,6 +67,7 @@ def W(x):
     return (x & 0xfefefefefefefefe) >> 1
 
 
+# Diagonal directions
 def NW(x):
     return N(W(x))
 
