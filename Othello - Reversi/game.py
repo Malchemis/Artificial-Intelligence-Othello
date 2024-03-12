@@ -3,7 +3,7 @@ import yaml
 from bitwise_func import set_state, cell_count, print_board, print_pieces
 from measure import profile_n, time_n  # Time measurement and Function Calls/Time Profiling
 from minmax_params import Strategy  # Enums for the strategies
-from next import get_next_moves, make_move
+from next import generate_moves, make_move
 from strategies import strategy
 
 
@@ -28,47 +28,33 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         tuple[int, int, int]: return code, white pieces, black pieces
     """
     error_handling(minimax_mode, mode, size)
-    enemy, own = init_bit_board(size)  # set the bit board
+    enemy, own = init_bit_board(size)  # set the bit board : white pieces, black pieces
     turn = -1  # Black starts
 
-    count_level = 0
-    own_knowledge = {count_level: {}}  # black knowledge initialized
-    enemy_knowledge = {count_level: {}}  # white knowledge initialized
+    nb_pieces_played = 0
 
     while True:
         if verbose == 2:
             status(own, enemy, size, turn)
 
-        moves, directions = get_next_moves(own, enemy, size, save_moves, own_knowledge, count_level)
+        # Generate the possible moves for the current player
+        moves, directions = generate_moves(own, enemy, size)
 
         if not moves:  # Verify if the other player can play
-            if not get_next_moves(enemy, own, size, save_moves, enemy_knowledge, count_level)[0]:
-                break  # End the game loop
+            if not generate_moves(enemy, own, size)[0]:
+                break  # End the game loop : No one can play
             own, enemy = enemy, own  # swap the players
-            own_knowledge, enemy_knowledge = enemy_knowledge, own_knowledge  # swap the knowledge
             turn *= -1
-            if save_moves:
-                if count_level in own_knowledge:
-                    del own_knowledge[count_level]
-                else:
-                    del enemy_knowledge[count_level]
-            continue  # Skip the current turn
+            continue  # Skip the current turn as the current player can't play
 
-        next_move = strategy(minimax_mode, mode, own, enemy, moves, turn, display, size, max_depth,
-                             save_moves, own_knowledge, count_level)  # Get the next move
-        enemy, own = make_move(own, enemy, next_move, directions)  # Play and Swap the players
-        own_knowledge, enemy_knowledge = enemy_knowledge, own_knowledge  # swap the knowledge
+        # Get the next move and play it
+        next_move = strategy(minimax_mode, mode, own, enemy, moves, turn, display, size, max_depth, save_moves,
+                             nb_pieces_played)
+        enemy, own = make_move(own, enemy, next_move, directions)  # Swap the pieces after the move
         turn *= -1
+        nb_pieces_played += 1
 
-        if save_moves:
-            if count_level in own_knowledge:
-                del own_knowledge[count_level]
-            else:
-                del enemy_knowledge[count_level]
-        count_level += 1
-
-    white_pieces, black_pieces = (own, enemy) if turn == 1 else (enemy, own)
-    return get_winner(white_pieces, black_pieces, verbose), own, enemy, turn
+    return get_winner(own, enemy, verbose, turn), own, enemy, turn
 
 
 def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:
@@ -105,17 +91,19 @@ def init_bit_board(size) -> tuple[int, int]:
     return white_pieces, black_pieces
 
 
-def get_winner(white_pieces: int, black_pieces: int, verbose: bool) -> int:
+def get_winner(own_pieces: int, enemy_pieces: int, verbose: bool, turn: int) -> int:
     """Print the winner and return the code of the winner
 
     Args:
-        white_pieces (int): a bit board of the current player
-        black_pieces (int): a bit board of the other player
+        own_pieces (int): the pieces of the current player
+        enemy_pieces (int): the pieces of the other player
         verbose (bool): print or not the winner
+        turn (int): the current player
     
     Returns:
         int: return code. -1 if black wins, 0 if tied, 1 if white wins
     """
+    white_pieces, black_pieces = (own_pieces, enemy_pieces) if turn == 1 else (enemy_pieces, own_pieces)
     black = cell_count(black_pieces)
     white = cell_count(white_pieces)
     if black > white:
