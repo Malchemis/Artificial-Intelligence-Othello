@@ -37,7 +37,7 @@ def generate_moves(own, enemy, size) -> tuple[list, dict]:
     dir_jump = {}  # Dictionary of moves and the number of pieces that can be captured in each direction
 
     # Generate moves in all eight directions
-    for direction in [N, S, E, W, NW, NE, SW, SE]:
+    for direction in [north, south, east, west, north_west, north_east, south_west, south_east]:
         # We get the pieces that are next to an enemy piece in the direction
         count = 0
         victims = direction(own) & enemy
@@ -83,53 +83,43 @@ def make_move(own, enemy, move_to_play, directions):
 
 # ------------------------------------ DIRECTIONS ------------------------------------ #
 # Orthogonal directions
-def N(x):
-    return (x & 0xffffffffffffff00) >> 8
+def north(x):
+    return x >> 8
 
 
-def S(x):
+def south(x):
     return (x & 0x00ffffffffffffff) << 8
 
 
-def E(x):
+def east(x):
     return (x & 0x7f7f7f7f7f7f7f7f) << 1
 
 
-def W(x):
+def west(x):
     return (x & 0xfefefefefefefefe) >> 1
 
 
 # Diagonal directions
-def NW(x):
-    return N(W(x))
+def north_west(x):
+    return north(west(x))
 
 
-def NE(x):
-    return N(E(x))
+def north_east(x):
+    return north(east(x))
 
 
-def SW(x):
-    return S(W(x))
+def south_west(x):
+    return south(west(x))
 
 
-def SE(x):
-    return S(E(x))
+def south_east(x):
+    return south(east(x))
+
+
+opposite_direction = {north: south, south: north, east: west, west: east, north_west: south_east,
+                      north_east: south_west,
+                      south_west: north_east, south_east: north_west}
 
 
 def opposite_dir(direction):
-    if direction == N:
-        return S
-    if direction == S:
-        return N
-    if direction == E:
-        return W
-    if direction == W:
-        return E
-    if direction == NW:
-        return SE
-    if direction == NE:
-        return SW
-    if direction == SW:
-        return NE
-    if direction == SE:
-        return NW
+    return opposite_direction[direction]

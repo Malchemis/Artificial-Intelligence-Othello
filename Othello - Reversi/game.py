@@ -143,7 +143,7 @@ def status(own: int, enemy: int, size: int, turn: int) -> None:
 
 
 def main():
-    with open("F:/Workspaces/PyCharm/IA - Fondements/Othello - Reversi/config.yaml", "r") as file:
+    with open(f"{__file__}/../config.yaml", "r") as file:
         config = yaml.safe_load(file)
     minimax_mode = (int(config["minimax_mode"][0]), int(config["minimax_mode"][1]))
     mode = (int(config["mode"][0]), int(config["mode"][1]))
