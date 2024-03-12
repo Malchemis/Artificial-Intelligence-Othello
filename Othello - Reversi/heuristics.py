@@ -3,8 +3,8 @@ from typing import Any
 import numpy as np
 from numpy import signedinteger
 
-from next import generate_moves
 from bitwise_func import cell_count
+from next import generate_moves
 
 
 def positional(own: int, enemy: int, size: int, table: np.ndarray) -> signedinteger[Any]:
@@ -17,8 +17,8 @@ def positional(own: int, enemy: int, size: int, table: np.ndarray) -> signedinte
         table (np.ndarray): table of values for the heuristic
     """
     # Convert the binary representations to boolean masks
-    own_mask = np.array([bool(own & (1 << i)) for i in range(size * size)])
     enemy_mask = np.array([bool(enemy & (1 << i)) for i in range(size * size)])
+    own_mask = np.array([bool(own & (1 << i)) for i in range(size * size)])
 
     # Apply the masks to the table and sum the values
     sum1 = np.sum(table[own_mask])

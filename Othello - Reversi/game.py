@@ -1,16 +1,14 @@
 import yaml
 
-from measure import profile_n, time_n  # Time measurement and Function Calls/Time Profiling
-
 from bitwise_func import set_state, cell_count, print_board, print_pieces
-from next import generate_moves, make_move
-
+from measure import profile_n, time_n  # Time measurement and Function Calls/Time Profiling
 from minmax_params import Strategy  # Enums for the strategies
+from next import get_next_moves, make_move
 from strategies import strategy
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
-            display: bool = False, verbose: bool = False) -> tuple[int, int, int, int]:
+            display: bool = False, verbose: bool = False, save_moves: bool = False) -> tuple[int, int, int, int]:
     """
     Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
     pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces
@@ -24,6 +22,7 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         max_depth (int, optional): max depth of the search tree. Defaults to 4.
         display (bool, optional): display the board for the bots. Defaults to False.
         verbose (bool, optional): print the winner. Defaults to False.
+        save_moves (bool, optional): save the moves as knowledge for each player (separately). Defaults to False.
 
     Returns:
         tuple[int, int, int]: return code, white pieces, black pieces
@@ -31,22 +30,42 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
     error_handling(minimax_mode, mode, size)
     enemy, own = init_bit_board(size)  # set the bit board
     turn = -1  # Black starts
+
+    count_level = 0
+    own_knowledge = {count_level: {}}  # black knowledge initialized
+    enemy_knowledge = {count_level: {}}  # white knowledge initialized
+
     while True:
         if verbose == 2:
             status(own, enemy, size, turn)
 
-        moves, directions = generate_moves(own, enemy, size)
+        moves, directions = get_next_moves(own, enemy, size, save_moves, own_knowledge, count_level)
 
         if not moves:  # Verify if the other player can play
-            if len(generate_moves(enemy, own, size)[0]) == 0:
+            if not get_next_moves(enemy, own, size, save_moves, enemy_knowledge, count_level)[0]:
                 break  # End the game loop
             own, enemy = enemy, own  # swap the players
+            own_knowledge, enemy_knowledge = enemy_knowledge, own_knowledge  # swap the knowledge
             turn *= -1
+            if save_moves:
+                if count_level in own_knowledge:
+                    del own_knowledge[count_level]
+                else:
+                    del enemy_knowledge[count_level]
             continue  # Skip the current turn
 
-        next_move = strategy(minimax_mode, mode, own, enemy, moves, turn, display, size, max_depth)  # Get the next move
-        enemy, own = make_move(own, enemy, next_move, directions, size)  # Play and Swap the players
+        next_move = strategy(minimax_mode, mode, own, enemy, moves, turn, display, size, max_depth,
+                             save_moves, own_knowledge, count_level)  # Get the next move
+        enemy, own = make_move(own, enemy, next_move, directions)  # Play and Swap the players
+        own_knowledge, enemy_knowledge = enemy_knowledge, own_knowledge  # swap the knowledge
         turn *= -1
+
+        if save_moves:
+            if count_level in own_knowledge:
+                del own_knowledge[count_level]
+            else:
+                del enemy_knowledge[count_level]
+        count_level += 1
 
     white_pieces, black_pieces = (own, enemy) if turn == 1 else (enemy, own)
     return get_winner(white_pieces, black_pieces, verbose), own, enemy, turn
@@ -132,9 +151,10 @@ def main():
     max_depth = int(config["max_depth"])
     display = config["display"]
     verbose = config["verbose"]
+    save_moves = config["save_moves"]
 
-    time_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose))
-    profile_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose))
+    time_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose, save_moves))
+    profile_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose, save_moves))
 
 
 if __name__ == "__main__":
