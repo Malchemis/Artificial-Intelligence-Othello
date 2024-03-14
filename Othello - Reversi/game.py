@@ -3,8 +3,9 @@ import yaml
 from bitwise_func import set_state, cell_count, print_board, print_pieces
 from measure import profile_n, time_n  # Time measurement and Function Calls/Time Profiling
 from minmax_params import Strategy  # Enums for the strategies
-from next import generate_moves, make_move
 from strategies import strategy
+
+from Node import Node
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
@@ -31,26 +32,35 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
     enemy, own = init_bit_board(size)  # set the bit board : white pieces, black pieces
     turn = -1  # Black starts
 
-    nb_pieces_played = 0
+    own_root = Node(None, own, enemy, turn, size)
+    enemy_root = Node(None, own, enemy, turn, size)
 
+    nb_pieces_played = 0
     while True:
         if verbose == 2:
-            status(own, enemy, size, turn)
+            status(own, enemy, size, turn, nb_pieces_played)
 
         # Generate the possible moves for the current player
-        moves, directions = generate_moves(own, enemy, size)
-
-        if not moves:  # Verify if the other player can play
-            if not generate_moves(enemy, own, size)[0]:
+        if not own_root.visited:
+            own_root.expand()
+        print(f"Turn {turn}, Turn (self): {own_root.turn}, Turn (enemy): {enemy_root.turn}")
+        if not own_root.moves:  # Verify if the other player can play
+            if not enemy_root.moves:
+                if not enemy_root.visited:
+                    enemy_root.expand()
                 break  # End the game loop : No one can play
-            own, enemy = enemy, own  # swap the players
+            enemy_root, own_root = own_root, enemy_root
             turn *= -1
             continue  # Skip the current turn as the current player can't play
 
-        # Get the next move and play it
-        next_move = strategy(minimax_mode, mode, own, enemy, moves, turn, display, size, max_depth, save_moves,
-                             nb_pieces_played)
-        enemy, own = make_move(own, enemy, next_move, directions)  # Swap the pieces after the move
+        # Get the next Node following the strategy
+        next_node = strategy(minimax_mode, mode, own_root, turn, display, size, max_depth, save_moves, nb_pieces_played)
+
+        if not enemy_root.visited:
+            enemy_root.expand()
+
+        enemy_root = enemy_root.get_other_child(next_node)
+        enemy_root, own_root = own_root, enemy_root
         turn *= -1
         nb_pieces_played += 1
 
@@ -119,8 +129,9 @@ def get_winner(own_pieces: int, enemy_pieces: int, verbose: bool, turn: int) -> 
     return 0
 
 
-def status(own: int, enemy: int, size: int, turn: int) -> None:
-    print("Turn: " + ("Black" if turn == -1 else "White"))
+def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) -> None:
+    str_status = "Black" if turn == -1 else "White"
+    print(f"Turn: {str_status}, Pieces played: {nb_pieces_played}")
     white_pieces, black_pieces = (own, enemy) if turn == 1 else (enemy, own)
     print_board(white_pieces, black_pieces, size)
     print_pieces(white_pieces, size)
