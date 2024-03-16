@@ -36,23 +36,19 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
     enemy_root = Node(None, own, enemy, turn, size)
 
     nb_pieces_played = 4
-    while True:
-        if own_root != enemy_root:
-            raise ValueError("Roots are not the same")
-
+    while nb_pieces_played < size * size:
         if verbose == 2:
             status(own, enemy, size, turn, nb_pieces_played)
 
         # Generate the possible moves for the current player
         if not own_root.visited:
             own_root.expand()
-        if len(own_root.moves) == 0:  # Verify if the other player can play
-            if not enemy_root.visited:
-                # duplicate the current node
+        if not own_root.moves:  # Verify if the other player can play
+            if not enemy_root.visited:  # Simulate a void move/duplicate and Add the current root the other player
                 own_root = own_root.add_other_child_from_pieces(own_root.enemy_pieces, own_root.own_pieces)
                 enemy_root = enemy_root.add_other_child(own_root)
                 enemy_root.expand()
-            if len(enemy_root.moves) == 0:
+            if not enemy_root.moves:
                 break  # End the game loop : No one can play
             enemy_root, own_root = own_root, enemy_root
             turn *= -1
