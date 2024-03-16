@@ -4,7 +4,7 @@ n: 10000
 # Maximum depth of the search tree (minimax algorithm)
 max_depth: 6
 # Whether to save the generated moves in a dict to save time
-save_moves: True
+save_moves: False
 
 # Who plays against who.
 # 0: human.
@@ -13,7 +13,7 @@ save_moves: True
 # 4: absolute (minimizes/maximizes the number of pieces for the opponent/player),
 # 5: mobility (minimizes/maximizes the number of possible moves for the opponent/player),
 # 6: mixed with TABLE1, 7: mixed with TABLE2. Mixed signifies using positional, then mobility, then absolute.
-mode: [0, 0]
+mode: [1, 1]
 
 # Which MiniMax version to use.
 # 0: Default MiniMax

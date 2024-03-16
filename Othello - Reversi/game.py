@@ -37,17 +37,16 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
 
     nb_pieces_played = 0
     while True:
+        input()
         if verbose == 2:
             status(own, enemy, size, turn, nb_pieces_played)
 
         # Generate the possible moves for the current player
         if not own_root.visited:
             own_root.expand()
-        print(f"Turn {turn}, Turn (self): {own_root.turn}, Turn (enemy): {enemy_root.turn}")
-        if not own_root.moves:  # Verify if the other player can play
-            if not enemy_root.moves:
-                if not enemy_root.visited:
-                    enemy_root.expand()
+        if len(own_root.moves) == 0:  # Verify if the other player can play
+            enemy_root.expand()
+            if len(enemy_root.moves) == 0:
                 break  # End the game loop : No one can play
             enemy_root, own_root = own_root, enemy_root
             turn *= -1
@@ -56,15 +55,18 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         # Get the next Node following the strategy
         next_node = strategy(minimax_mode, mode, own_root, turn, display, size, max_depth, save_moves, nb_pieces_played)
 
-        if not enemy_root.visited:
-            enemy_root.expand()
+        # Advance the tree
+        own_root = own_root.get_child(next_node)
+        enemy_root.add_other_child(next_node)
+        enemy_root = enemy_root.get_child(next_node)
 
-        enemy_root = enemy_root.get_other_child(next_node)
+        # Swap and update metrics
         enemy_root, own_root = own_root, enemy_root
         turn *= -1
         nb_pieces_played += 1
 
-    return get_winner(own, enemy, verbose, turn), own, enemy, turn
+    
+    return get_winner(own_pieces, enemy_pieces, verbose, turn), own_pieces, enemy_pieces, turn
 
 
 def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:

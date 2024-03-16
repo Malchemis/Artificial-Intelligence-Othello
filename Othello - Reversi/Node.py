@@ -26,23 +26,14 @@ class Node:
                          for move in self.moves]
         self.visited = True
 
-    def get_other_child(self, other):
-        for i, child in enumerate(self.children):
-            if child == other:
-                # print("got it")
-                return child
-            else:
-                pass
-                # print(f"child {i}:")
-                # print_board(child.own_pieces, child.enemy_pieces, size=self.size)
-        # print("caca")
-        return None
+    def get_child(self, child):
+        return self.children[self.children.index(child)]
+
+    def add_other_child(self, other):
+        self.children.append(Node(self, other.own_pieces, other.enemy_pieces, -self.turn, self.size))
 
     def __eq__(self, other):
         return self.own_pieces == other.own_pieces and self.enemy_pieces == other.enemy_pieces
-
-    def __hash__(self):
-        return hash((self.own_pieces, self.enemy_pieces, self.turn))
 
     def __repr__(self):
         return f"{self.own_pieces}, {self.enemy_pieces}, {self.turn}"
