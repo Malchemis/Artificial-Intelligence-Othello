@@ -3,8 +3,6 @@ n: 10000
 
 # Maximum depth of the search tree (minimax algorithm)
 max_depth: 6
-# Whether to save the generated moves in a dict to save time
-save_moves: False
 
 # Who plays against who.
 # 0: human.
@@ -26,6 +24,10 @@ minimax_mode: [3, 3]
 size: 8
 
 # Whether to display the board with a graphical interface
-display: True
+display: False
 # Whether to print the result of a game
-verbose: 0  # Verbose levels : 0: no print, 1: print only the result, 2: print the result and the boards
+verbose: 0  # Verbose levels : 0: no print, 1: print only the result, 2: print the result and the boards after each turn
+# Whether to profile the code
+profile: False
+# Whether to visualize a replay of the game
+replay: True

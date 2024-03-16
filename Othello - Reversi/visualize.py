@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 
 from bitwise_func import get_indexes_move
-from Node import Node
 
 HEIGHT = 600
 WIDTH = 600
@@ -13,7 +12,7 @@ GREY = (125, 125, 125)
 
 
 def cv2_display(size: int, own: int, enemy: int, moves: list, turn: int,
-                display_only: bool = False, last_display: bool = False) -> Node | None:
+                display_only: bool = False, last_display: bool = False) -> int | None:
     """
     Display the Othello board using OpenCV
 

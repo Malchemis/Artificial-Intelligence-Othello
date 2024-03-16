@@ -1,5 +1,4 @@
 from next import generate_moves, make_move
-# from bitwise_func import print_board
 
 
 class Node:
@@ -13,27 +12,34 @@ class Node:
         self.moves = []
         self.directions = {}
         self.value = None
-        self.best_move = None
         self.visited = False
 
     def expand(self):
         self.moves, self.directions = generate_moves(self.own_pieces, self.enemy_pieces, self.size)
-        # for move in self.moves:
-        #     own, enemy = make_move(self.own_pieces, self.enemy_pieces, move, self.directions)
-        #     self.children.append(Node(self, enemy, own, -self.turn, self.size))
-        self.children = [Node(self, *make_move(self.own_pieces, self.enemy_pieces, move, self.directions)[::-1],
-                              -self.turn, self.size)
-                         for move in self.moves]
         self.visited = True
+
+    def set_child(self, move):
+        own, enemy = make_move(self.own_pieces, self.enemy_pieces, move, self.directions)
+        child = Node(self, enemy, own, -self.turn, self.size)
+        self.children.append(child)
+        return child
 
     def get_child(self, child):
         return self.children[self.children.index(child)]
 
     def add_other_child(self, other):
-        self.children.append(Node(self, other.own_pieces, other.enemy_pieces, -self.turn, self.size))
+        child = Node(self, other.own_pieces, other.enemy_pieces, -self.turn, self.size)
+        self.children.append(child)
+        return child
+
+    def add_other_child_from_pieces(self, own, enemy):
+        child = Node(self, own, enemy, -self.turn, self.size)
+        self.children.append(child)
+        return child
 
     def __eq__(self, other):
-        return self.own_pieces == other.own_pieces and self.enemy_pieces == other.enemy_pieces
+        return (self.own_pieces == other.own_pieces and self.enemy_pieces == other.enemy_pieces
+                and self.turn == other.turn)
 
     def __repr__(self):
         return f"{self.own_pieces}, {self.enemy_pieces}, {self.turn}"

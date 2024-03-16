@@ -1,15 +1,16 @@
 import yaml
 
 from bitwise_func import set_state, cell_count, print_board, print_pieces
-from measure import profile_n, time_n  # Time measurement and Function Calls/Time Profiling
+from measure import time_n  # Time measurement and Function Calls/Time Profiling
 from minmax_params import Strategy  # Enums for the strategies
 from strategies import strategy
-
+from visualize import cv2_display
+from next import generate_moves
 from Node import Node
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
-            display: bool = False, verbose: bool = False, save_moves: bool = False) -> tuple[int, int, int, int]:
+            display: bool = False, verbose: bool = False) -> tuple[int, int, int, int, Node]:
     """
     Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
     pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces
@@ -23,7 +24,6 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         max_depth (int, optional): max depth of the search tree. Defaults to 4.
         display (bool, optional): display the board for the bots. Defaults to False.
         verbose (bool, optional): print the winner. Defaults to False.
-        save_moves (bool, optional): save the moves as knowledge for each player (separately). Defaults to False.
 
     Returns:
         tuple[int, int, int]: return code, white pieces, black pieces
@@ -35,9 +35,11 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
     own_root = Node(None, own, enemy, turn, size)
     enemy_root = Node(None, own, enemy, turn, size)
 
-    nb_pieces_played = 0
+    nb_pieces_played = 4
     while True:
-        input()
+        if own_root != enemy_root:
+            raise ValueError("Roots are not the same")
+
         if verbose == 2:
             status(own, enemy, size, turn, nb_pieces_played)
 
@@ -45,28 +47,37 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         if not own_root.visited:
             own_root.expand()
         if len(own_root.moves) == 0:  # Verify if the other player can play
-            enemy_root.expand()
+            if not enemy_root.visited:
+                # duplicate the current node
+                own_root = own_root.add_other_child_from_pieces(own_root.enemy_pieces, own_root.own_pieces)
+                enemy_root = enemy_root.add_other_child(own_root)
+                enemy_root.expand()
             if len(enemy_root.moves) == 0:
                 break  # End the game loop : No one can play
             enemy_root, own_root = own_root, enemy_root
             turn *= -1
             continue  # Skip the current turn as the current player can't play
 
-        # Get the next Node following the strategy
-        next_node = strategy(minimax_mode, mode, own_root, turn, display, size, max_depth, save_moves, nb_pieces_played)
+        if display:  # Display the board using OpenCV
+            cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, turn, display_only=True)
 
-        # Advance the tree
-        own_root = own_root.get_child(next_node)
-        enemy_root.add_other_child(next_node)
-        enemy_root = enemy_root.get_child(next_node)
+        # Get the next Node following the strategy
+        next_move = strategy(minimax_mode, mode, own_root, turn, size, max_depth, nb_pieces_played)
+        own_root = own_root.set_child(next_move)
+
+        # Advance the tree for the other player
+        enemy_root = enemy_root.add_other_child(own_root)
 
         # Swap and update metrics
         enemy_root, own_root = own_root, enemy_root
         turn *= -1
         nb_pieces_played += 1
 
-    
-    return get_winner(own_pieces, enemy_pieces, verbose, turn), own_pieces, enemy_pieces, turn
+    return (get_winner(own_root.own_pieces, own_root.enemy_pieces, verbose, own_root.turn),
+            own_root.own_pieces,
+            own_root.enemy_pieces,
+            nb_pieces_played,
+            own_root)
 
 
 def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:
@@ -143,19 +154,35 @@ def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) ->
     print(white_pieces | black_pieces)
 
 
+def replay(node: Node, size: int) -> None:
+    """Replay the game based on the moves of the Node by backtracking the tree and using a LIFO queue"""
+    game = []
+    while node.parent is not None:
+        game.append(node)
+        node = node.parent
+    game.reverse()
+    for node in game:
+        if not node.moves:
+            node.moves = generate_moves(node.own_pieces, node.enemy_pieces, size)[0]
+        cv2_display(size, node.own_pieces, node.enemy_pieces, node.moves, node.turn, display_only=True)
+        print("Press Enter to continue...", end="")
+        input()
+
+
 def main():
     with open(f"{__file__}/../config.yaml", "r") as file:
         config = yaml.safe_load(file)
-    minimax_mode = (int(config["minimax_mode"][0]), int(config["minimax_mode"][1]))
-    mode = (int(config["mode"][0]), int(config["mode"][1]))
-    size = int(config["size"])
-    max_depth = int(config["max_depth"])
-    display = config["display"]
-    verbose = config["verbose"]
-    save_moves = config["save_moves"]
 
-    time_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose, save_moves))
-    profile_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose, save_moves))
+    wins, onsets, offsets, nb_pieces_played_sum, nodes = time_n(
+        othello,
+        config["n"],
+        (config["minimax_mode"], config["mode"], config["size"], config["max_depth"], config["display"],
+         config["verbose"]),
+        profile=config["profile"]
+    )
+
+    if config["replay"]:
+        replay(nodes[0], config["size"])
 
 
 if __name__ == "__main__":
