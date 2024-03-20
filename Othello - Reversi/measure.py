@@ -66,3 +66,18 @@ def time_n(func: callable, n: int, params: tuple, profile: bool = False) -> tupl
     print_runs_stats(wins, onsets, offsets, nb_pieces_played_sum, n)
 
     return wins, onsets, offsets, nb_pieces_played_sum, nodes
+
+
+def time_only(func: callable, n: int, params: tuple) -> None:
+    """Time the code without recording the stats
+
+    Args:
+        func (callable): function to time
+        n (int): number of iterations
+        params (tuple): parameters of the game
+    """
+    onset = time.perf_counter()
+    for _ in range(n):
+        func(*params)
+    offset = time.perf_counter()
+    print("Executed in :", offset - onset)

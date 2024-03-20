@@ -1,7 +1,7 @@
 import yaml
 
 from bitwise_func import set_state, cell_count, print_board, print_pieces
-from measure import time_n  # Time measurement and Function Calls/Time Profiling
+from measure import time_n, time_only  # Time measurement and Function Calls/Time Profiling
 from minmax_params import Strategy  # Enums for the strategies
 from strategies import strategy
 from visualize import cv2_display
@@ -59,6 +59,12 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
 
         # Get the next Node following the strategy
         own_root = strategy(minimax_mode, mode, own_root, turn, size, max_depth, nb_pieces_played)
+
+        # We remove unused nodes to save memory (Garbage Collector)
+        # if own_root.parent is not None:
+        #     parent = own_root.parent
+        #     parent.children = [own_root]
+        #     own_root.parent = parent
 
         # Advance the tree for the other player
         enemy_root = enemy_root.add_other_child(own_root)
@@ -152,9 +158,11 @@ def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) ->
 def replay(node: Node, size: int) -> None:
     """Replay the game based on the moves of the Node by backtracking the tree and using a LIFO queue"""
     game = []
+    count_child = 0
     while node.parent is not None:
         game.append(node)
         node = node.parent
+        count_child += len(node.children)
     game.reverse()
     for node in game:
         if not node.moves:
@@ -167,6 +175,11 @@ def replay(node: Node, size: int) -> None:
 def main():
     with open(f"{__file__}/../config.yaml", "r") as file:
         config = yaml.safe_load(file)
+
+    if config["time_only"]:
+        time_only(othello, config["n"], (config["minimax_mode"], config["mode"], config["size"], config["max_depth"],
+                                         config["display"], config["verbose"]))
+        return
 
     wins, onsets, offsets, nb_pieces_played_sum, nodes = time_n(
         othello,

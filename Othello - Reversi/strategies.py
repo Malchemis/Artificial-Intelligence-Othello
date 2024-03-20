@@ -54,7 +54,7 @@ def strategy(minimax_mode: tuple, mode: tuple, node: Node, turn: int,
 
 def which_mode(mode: tuple, minimax_mode: tuple, turn: int) -> tuple:
     """Return the player type and the minimax version to use based on the turn"""
-    if turn == 1:
+    if turn == -1:
         player = mode[0]
         minimax_func = minimax_mode[0]
     else:
@@ -112,11 +112,11 @@ def minimax(node: Node, turn: int, size: int, heuristic: callable, depth: int = 
         node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
         return node
 
-    if not node.moves:
-        if node.visited:
-            node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
-            return node
+    if not node.visited:
         node.expand()
+    if not node.moves:
+        node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
+        return node
 
     best = -MAX_INT if depth % 2 == 0 else MAX_INT
     best_nodes = []
@@ -148,11 +148,11 @@ def minimax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, de
         node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
         return node
 
-    if not node.moves:
-        if node.visited:
-            node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
-            return node
+    if not node.visited:
         node.expand()
+    if not node.moves:
+        node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
+        return node
 
     best = -MAX_INT if depth % 2 == 0 else MAX_INT
     best_nodes = []
@@ -184,7 +184,7 @@ def minimax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, de
 
 def negamax(node: Node, turn: int, size: int, heuristic: callable, depth: int = MAX_DEPTH, alpha: int = -MAX_INT,
             beta: int = MAX_INT, table=None) -> Node:
-    """Negamax version of the MinMax Algorithm"""
+    """Negamax version of the MinMax Algorithm. Only works for pair depth."""
     # End of the recursion : Max depth reached or no more possible moves
     if depth == MAX_DEPTH:
         node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
@@ -219,8 +219,8 @@ def negamax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, de
         return node
 
     if not node.visited:
-        node.expand()  # Visit the node and Generate the possible moves for the current player
-    if not node.moves:  # Cannot play so we return the heuristic value
+        node.expand()
+    if not node.moves:
         node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
         return node
 
@@ -228,16 +228,18 @@ def negamax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, de
     best_nodes = []
     for move in node.moves:
         child = node.set_child(move)
-        score = -negamax_alpha_beta(child, -turn, size, heuristic, depth + 1, -beta, -alpha, table).value
+        child.value = -negamax_alpha_beta(child, -turn, size, heuristic, depth + 1, -beta, -alpha, table).value
 
-        if score == best:
-            best_nodes.append(child)
-        elif score > best:
-            best = score
+        if child.value > best:
+            best = child.value
             best_nodes = [child]
             if best > alpha:
                 alpha = best
                 if alpha > beta:
                     break
-    node.value = best
+        elif child.value == best:
+            best_nodes.append(child)
+    # print("Depth: ", depth, "Turn: ", turn, "Alpha: ", alpha, "Beta: ", beta, "Value: ", best)
+    # cv2_display(size, node.own_pieces, node.enemy_pieces, node.moves, turn, display_only=True)
+    # input("Press Enter to continue...")
     return random.choice(best_nodes)
