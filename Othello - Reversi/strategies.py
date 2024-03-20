@@ -10,7 +10,7 @@ MAX_DEPTH = 0
 
 
 def strategy(minimax_mode: tuple, mode: tuple, node: Node, turn: int,
-             size: int, max_depth: int, nb_pieces_played) -> int:
+             size: int, max_depth: int, nb_pieces_played) -> Node:
     """Return the next move based on the strategy.
 
     Args:
@@ -33,22 +33,23 @@ def strategy(minimax_mode: tuple, mode: tuple, node: Node, turn: int,
 
     # Human player
     if player == Strategy.HUMAN:
-        return s_human(node, turn, size)
+        next_move = s_human(node, turn, size)
+        return node.set_child(next_move)
 
     # Random player
     if player == Strategy.RANDOM:
-        return random.choice(node.moves)
+        next_move = random.choice(node.moves)
+        return node.set_child(next_move)
 
     func_to_use = which_minimax(minimax_func)  # Get the minimax function to use
 
-    # Define which table to use, table 1 or 2, or we don't care (for absolute, mobility and mixed) as it won't be used
-    table_to_use = TABLE1 if player == Strategy.POSITIONAL_TABLE1 or player == Strategy.MIXED_TABLE1 else TABLE2
+    # Define which table to use, table 1 or 2, or we don't care (for absolute/mobility) as it won't be used
+    table_to_use = TABLE1 if (player == Strategy.POSITIONAL_TABLE1 or player == Strategy.MIXED_TABLE1) else TABLE2
 
     # Define which heuristic to use
     heuristic_to_use = which_heuristic(player, nb_pieces_played)
 
-    return func_to_use(node, turn, 0, size, -MAX_INT, MAX_INT,
-                       heuristic=heuristic_to_use, table=table_to_use)[1]
+    return func_to_use(node, turn, size, heuristic_to_use, table=table_to_use)
 
 
 def which_mode(mode: tuple, minimax_mode: tuple, turn: int) -> tuple:
@@ -103,8 +104,8 @@ def s_human(node: Node, turn: int, size: int) -> int:
     return move
 
 
-def minimax(node: Node, turn: int, depth: int, size: int, alpha: int, beta: int,
-            heuristic, table=None) -> Node:
+def minimax(node: Node, turn: int, size: int, heuristic: callable, depth: int = MAX_DEPTH, alpha: int = -MAX_INT,
+            beta: int = MAX_INT, table=None) -> Node:
     """MiniMax Algorithm"""
     # End of the recursion : Max depth reached or no more possible moves
     if depth == MAX_DEPTH:
@@ -138,8 +139,9 @@ def minimax(node: Node, turn: int, depth: int, size: int, alpha: int, beta: int,
     return random.choice(best_nodes)
 
 
-def minimax_alpha_beta(node: Node, turn: int, depth: int, size: int, alpha: int, beta: int,
-                       heuristic, table=None) -> Node:
+def minimax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, depth: int = MAX_DEPTH,
+                       alpha: int = -MAX_INT,
+                       beta: int = MAX_INT, table=None) -> Node:
     """MinMax Algorithm with alpha-beta pruning"""
     # End of the recursion : Max depth reached or no more possible moves
     if depth == MAX_DEPTH:
@@ -180,8 +182,8 @@ def minimax_alpha_beta(node: Node, turn: int, depth: int, size: int, alpha: int,
     return random.choice(best_nodes)
 
 
-def negamax(node: Node, turn: int, depth: int, size: int, alpha: int, beta: int,
-            heuristic, table=None) -> Node:
+def negamax(node: Node, turn: int, size: int, heuristic: callable, depth: int = MAX_DEPTH, alpha: int = -MAX_INT,
+            beta: int = MAX_INT, table=None) -> Node:
     """Negamax version of the MinMax Algorithm"""
     # End of the recursion : Max depth reached or no more possible moves
     if depth == MAX_DEPTH:
@@ -204,27 +206,29 @@ def negamax(node: Node, turn: int, depth: int, size: int, alpha: int, beta: int,
             best_nodes = [child]
         elif score == best:
             best_nodes.append(child)
+    node.value = best
     return random.choice(best_nodes)
 
 
-def negamax_alpha_beta(node: Node, turn: int, depth: int, size: int, alpha: int, beta: int,
-                       heuristic, table=None) -> Node:
+def negamax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, depth: int = 0,
+                       alpha: int = -MAX_INT, beta: int = MAX_INT, table=None) -> Node:
     """Negamax version of the MinMax Algorithm with alpha-beta pruning. Only works for pair depth."""
     # End of the recursion : Max depth reached or no more possible moves
     if depth == MAX_DEPTH:
         node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
         return node
 
-    if not node.moves:
-        if node.visited:
-            node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
-            return node
-        node.expand()
+    if not node.visited:
+        node.expand()  # Visit the node and Generate the possible moves for the current player
+    if not node.moves:  # Cannot play so we return the heuristic value
+        node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
+        return node
 
     best = -MAX_INT
     best_nodes = []
-    for child in node.children:
-        score = -negamax_alpha_beta(child, -turn, depth + 1, size, -beta, -alpha, heuristic, table).value
+    for move in node.moves:
+        child = node.set_child(move)
+        score = -negamax_alpha_beta(child, -turn, size, heuristic, depth + 1, -beta, -alpha, table).value
 
         if score == best:
             best_nodes.append(child)
@@ -235,4 +239,5 @@ def negamax_alpha_beta(node: Node, turn: int, depth: int, size: int, alpha: int,
                 alpha = best
                 if alpha > beta:
                     break
+    node.value = best
     return random.choice(best_nodes)

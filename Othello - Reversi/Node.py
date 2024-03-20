@@ -24,6 +24,11 @@ class Node:
         self.children.append(child)
         return child
 
+    def set_children(self):
+        for move in self.moves:
+            own, enemy = make_move(self.own_pieces, self.enemy_pieces, move, self.directions)
+            self.children.append(Node(self, enemy, own, -self.turn, self.size))
+
     def get_child(self, child):
         return self.children[self.children.index(child)]
 

@@ -58,8 +58,7 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
             cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, turn, display_only=True)
 
         # Get the next Node following the strategy
-        next_move = strategy(minimax_mode, mode, own_root, turn, size, max_depth, nb_pieces_played)
-        own_root = own_root.set_child(next_move)
+        own_root = strategy(minimax_mode, mode, own_root, turn, size, max_depth, nb_pieces_played)
 
         # Advance the tree for the other player
         enemy_root = enemy_root.add_other_child(own_root)
