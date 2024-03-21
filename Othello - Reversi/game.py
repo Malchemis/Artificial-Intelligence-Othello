@@ -29,49 +29,48 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         tuple[int, int, int]: return code, white pieces, black pieces
     """
     error_handling(minimax_mode, mode, size)
-    enemy, own = init_bit_board(size)  # set the bit board : white pieces, black pieces
+    enemy, own = init_bit_board(size)  # set the bitboards : white pieces, black pieces
     turn = -1  # Black starts
 
     own_root = Node(None, own, enemy, turn, size)
     enemy_root = Node(None, own, enemy, turn, size)
 
     nb_pieces_played = 4
-    while nb_pieces_played < size * size:
+    while True:
         if verbose == 2:
-            status(own, enemy, size, turn, nb_pieces_played)
+            status(own, enemy, size, own_root.turn, nb_pieces_played)
 
         # Generate the possible moves for the current player
         if not own_root.visited:
             own_root.expand()
         if not own_root.moves:  # Verify if the other player can play
-            if not enemy_root.visited:  # Simulate a void move/duplicate and Add the current root the other player
-                own_root = own_root.add_other_child_from_pieces(own_root.enemy_pieces, own_root.own_pieces)
-                enemy_root = enemy_root.add_other_child(own_root)
-                enemy_root.expand()
+            # Simulate a void move/duplicate and Add the current root the other player
+            own_root = own_root.add_other_child_from_pieces(own_root.enemy_pieces, own_root.own_pieces)
+            enemy_root = enemy_root.add_other_child(own_root)
+            enemy_root.expand()
             if not enemy_root.moves:
                 break  # End the game loop : No one can play
             enemy_root, own_root = own_root, enemy_root
-            turn *= -1
             continue  # Skip the current turn as the current player can't play
 
         if display:  # Display the board using OpenCV
-            cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, turn, display_only=True)
+            cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, own_root.turn,
+                        display_only=True)
 
         # Get the next Node following the strategy
-        own_root = strategy(minimax_mode, mode, own_root, turn, size, max_depth, nb_pieces_played)
+        own_root = strategy(minimax_mode, mode, own_root, own_root.turn, size, max_depth, nb_pieces_played)
 
         # We remove unused nodes to save memory (Garbage Collector)
-        # if own_root.parent is not None:
-        #     parent = own_root.parent
-        #     parent.children = [own_root]
-        #     own_root.parent = parent
+        if own_root.parent is not None:
+            parent = own_root.parent
+            parent.children = [own_root]
+            own_root.parent = parent
 
         # Advance the tree for the other player
         enemy_root = enemy_root.add_other_child(own_root)
 
         # Swap and update metrics
         enemy_root, own_root = own_root, enemy_root
-        turn *= -1
         nb_pieces_played += 1
 
     return (get_winner(own_root.own_pieces, own_root.enemy_pieces, verbose, own_root.turn),

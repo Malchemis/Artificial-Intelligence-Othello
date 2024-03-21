@@ -190,21 +190,23 @@ def negamax(node: Node, turn: int, size: int, heuristic: callable, depth: int = 
         node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
         return node
 
-    if not node.moves:
-        if node.visited:
-            node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
-            return node
+    if not node.visited:
         node.expand()
+    if not node.moves:
+        node.value = heuristic(node.own_pieces, node.enemy_pieces, size, table)
+        return node
 
     best = -MAX_INT
     best_nodes = []
-    for child in node.children:
-        score = -negamax(child, -turn, depth + 1, size, alpha, beta, heuristic, table).value
+    for move in node.moves:
+        child = node.set_child(move)
+        child.value = -negamax(child, -turn, size, heuristic, depth=depth + 1, alpha=-beta, beta=-alpha,
+                               table=table).value
 
-        if score > best:
-            best = score
+        if child.value > best:
+            best = child.value
             best_nodes = [child]
-        elif score == best:
+        elif child.value == best:
             best_nodes.append(child)
     node.value = best
     return random.choice(best_nodes)
@@ -228,7 +230,8 @@ def negamax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, de
     best_nodes = []
     for move in node.moves:
         child = node.set_child(move)
-        child.value = -negamax_alpha_beta(child, -turn, size, heuristic, depth + 1, -beta, -alpha, table).value
+        child.value = -negamax_alpha_beta(child, -turn, size, heuristic, depth=depth + 1, alpha=-beta, beta=-alpha,
+                                          table=table).value
 
         if child.value > best:
             best = child.value
@@ -239,7 +242,5 @@ def negamax_alpha_beta(node: Node, turn: int, size: int, heuristic: callable, de
                     break
         elif child.value == best:
             best_nodes.append(child)
-    # print("Depth: ", depth, "Turn: ", turn, "Alpha: ", alpha, "Beta: ", beta, "Value: ", best)
-    # cv2_display(size, node.own_pieces, node.enemy_pieces, node.moves, turn, display_only=True)
-    # input("Press Enter to continue...")
+    node.value = best
     return random.choice(best_nodes)

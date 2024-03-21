@@ -1,8 +1,8 @@
 # Number of iterations for the time measurement
-n: 50
+n: 1000
 
 # Maximum depth of the search tree (minimax algorithm)
-max_depth: 4
+max_depth: 6
 
 # Who plays against who.
 # 0: human.
