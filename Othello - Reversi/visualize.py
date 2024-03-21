@@ -70,7 +70,6 @@ def cv2_display(size: int, own: int, enemy: int, moves: list, turn: int,
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):
                 cv2.destroyAllWindows()
-                exit(0)
         return None
 
     # Wait for the user to click on a cell

@@ -1,12 +1,11 @@
 import yaml
 
 from bitwise_func import set_state, cell_count, print_board, print_pieces
-from measure import time_n, time_only  # Time measurement and Function Calls/Time Profiling
-from minmax_params import Strategy  # Enums for the strategies
+from measure import time_n, time_only   # Time measurement and Function Calls/Time Profiling
+from minmax_params import Strategy      # Enums for the strategies
 from strategies import strategy
 from visualize import cv2_display
-from next import generate_moves
-from Node import Node
+from Node import Node, replay
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
@@ -29,13 +28,12 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         tuple[int, int, int]: return code, white pieces, black pieces
     """
     error_handling(minimax_mode, mode, size)
-    enemy, own = init_bit_board(size)  # set the bitboards : white pieces, black pieces
-    turn = -1  # Black starts
 
-    own_root = Node(None, own, enemy, turn, size)
-    enemy_root = Node(None, own, enemy, turn, size)
+    enemy, own = init_bit_board(size)   # set the bitboards : white pieces, black pieces
+    own_root = Node(None, own, enemy, -1, size)     # -1 for black, 1 for white
+    enemy_root = Node(None, own, enemy, -1, size)
 
-    nb_pieces_played = 4
+    nb_pieces_played = 4    # You can put this to 0 if you don't consider the starting pieces
     while True:
         if verbose == 2:
             status(own, enemy, size, own_root.turn, nb_pieces_played)
@@ -43,22 +41,24 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         # Generate the possible moves for the current player
         if not own_root.visited:
             own_root.expand()
-        if not own_root.moves:  # Verify if the other player can play
-            # Simulate a void move/duplicate and Add the current root the other player
-            own_root = own_root.add_other_child_from_pieces(own_root.enemy_pieces, own_root.own_pieces)
+        if not own_root.moves:  # Verify if the other player can play*
+            if own_root.children:
+                print(own_root.children)
+            own_root.own_pieces, own_root.enemy_pieces = own_root.enemy_pieces, own_root.own_pieces
+            own_root.turn = -own_root.turn
             enemy_root = enemy_root.add_other_child(own_root)
             enemy_root.expand()
             if not enemy_root.moves:
-                break  # End the game loop : No one can play
+                break   # End the game loop : No one can play
             enemy_root, own_root = own_root, enemy_root
-            continue  # Skip the current turn as the current player can't play
+            continue    # Skip the current turn since the current player can't play
 
-        if display:  # Display the board using OpenCV
+        if display:     # Display the board using OpenCV
             cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, own_root.turn,
                         display_only=True)
 
-        # Get the next Node following the strategy
-        own_root = strategy(minimax_mode, mode, own_root, own_root.turn, size, max_depth, nb_pieces_played)
+        # Get the next Node from the strategy
+        own_root = strategy(minimax_mode, mode, own_root, max_depth, nb_pieces_played)
 
         # We remove unused nodes to save memory (Garbage Collector)
         if own_root.parent is not None:
@@ -68,10 +68,8 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
 
         # Advance the tree for the other player
         enemy_root = enemy_root.add_other_child(own_root)
-
-        # Swap and update metrics
-        enemy_root, own_root = own_root, enemy_root
-        nb_pieces_played += 1
+        enemy_root, own_root = own_root, enemy_root     # Swap
+        nb_pieces_played += 1   # and update metrics
 
     return (get_winner(own_root.own_pieces, own_root.enemy_pieces, verbose, own_root.turn),
             own_root.own_pieces,
@@ -152,23 +150,6 @@ def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) ->
     print(f"{white_pieces:064b}")
     print(f"{black_pieces:064b}")
     print(white_pieces | black_pieces)
-
-
-def replay(node: Node, size: int) -> None:
-    """Replay the game based on the moves of the Node by backtracking the tree and using a LIFO queue"""
-    game = []
-    count_child = 0
-    while node.parent is not None:
-        game.append(node)
-        node = node.parent
-        count_child += len(node.children)
-    game.reverse()
-    for node in game:
-        if not node.moves:
-            node.moves = generate_moves(node.own_pieces, node.enemy_pieces, size)[0]
-        cv2_display(size, node.own_pieces, node.enemy_pieces, node.moves, node.turn, display_only=True)
-        print("Press Enter to continue...", end="")
-        input()
 
 
 def main():

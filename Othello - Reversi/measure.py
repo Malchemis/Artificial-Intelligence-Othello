@@ -3,6 +3,7 @@ import pstats
 import time
 
 from tqdm import tqdm
+from Node import replay
 
 
 def print_runs_stats(wins, onsets, offsets, nb_pieces_played, n: int) -> None:

@@ -1,5 +1,5 @@
 # Number of iterations for the time measurement
-n: 1000
+n: 40
 
 # Maximum depth of the search tree (minimax algorithm)
 max_depth: 6
