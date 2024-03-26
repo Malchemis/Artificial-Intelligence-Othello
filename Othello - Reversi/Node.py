@@ -44,12 +44,12 @@ class Node:
         self.children.append(child)
         return child
 
+    def invert(self):
+        self.enemy_pieces, self.own_pieces, self.turn = self.own_pieces, self.enemy_pieces, -self.turn
+
     def __eq__(self, other):
         return (self.own_pieces == other.own_pieces and self.enemy_pieces == other.enemy_pieces
                 and self.turn == other.turn)
-
-    def __repr__(self):
-        return f"{self.own_pieces}, {self.enemy_pieces}, {self.turn}"
 
     def __str__(self):
         return f"{self.own_pieces}, {self.enemy_pieces}, {self.turn}"

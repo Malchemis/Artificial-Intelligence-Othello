@@ -44,8 +44,7 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         if not own_root.moves:  # Verify if the other player can play*
             if own_root.children:
                 print(own_root.children)
-            own_root.own_pieces, own_root.enemy_pieces = own_root.enemy_pieces, own_root.own_pieces
-            own_root.turn = -own_root.turn
+            own_root.invert()   # Swap players and turn
             enemy_root = enemy_root.add_other_child(own_root)
             enemy_root.expand()
             if not enemy_root.moves:
