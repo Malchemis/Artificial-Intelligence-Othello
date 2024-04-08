@@ -1,6 +1,5 @@
 from next import generate_moves, make_move
 from visualize import cv2_display
-import cv2
 
 
 class Node:
@@ -35,6 +34,9 @@ class Node:
         return self.children[self.children.index(child)]
 
     def add_other_child(self, other):
+        for child in self.children:
+            if child == other:
+                return child
         child = Node(self, other.own_pieces, other.enemy_pieces, other.turn, other.size)
         self.children.append(child)
         return child
@@ -46,6 +48,12 @@ class Node:
 
     def invert(self):
         self.enemy_pieces, self.own_pieces, self.turn = self.own_pieces, self.enemy_pieces, -self.turn
+
+    def count_all_children(self):
+        count = len(self.children)
+        for child in self.children:
+            count += child.count_all_children()
+        return count
 
     def __eq__(self, other):
         return (self.own_pieces == other.own_pieces and self.enemy_pieces == other.enemy_pieces
@@ -74,4 +82,3 @@ def replay(node: Node, size: int) -> None:
         cv2_display(size, node.own_pieces, node.enemy_pieces, node.moves, node.turn, display_only=True)
         print("Press Enter to continue...", end="")
         input()
-    cv2.destroyAllWindows()

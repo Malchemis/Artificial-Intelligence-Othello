@@ -20,7 +20,6 @@ def strategy(minimax_mode: tuple, mode: tuple, node: Node, max_depth: int, nb_pi
     Returns:
         tuple: next move
     """
-
     # Get the player type and the minimax version
     player, minimax_func = which_mode(mode, minimax_mode, node.turn)
 
@@ -203,6 +202,39 @@ def negamax(node: Node, heuristic: callable, max_depth: int, depth: int = 0, alp
     return random.choice(best_nodes)
 
 
+# def negamax_alpha_beta(node: Node, heuristic: callable, max_depth: int, depth: int = 0,
+#                        alpha: int = -MAX_INT, beta: int = MAX_INT, table=None) -> Node:
+#     """Negamax version of the MinMax Algorithm with alpha-beta pruning. Only works for pair depth."""
+#     # End of the recursion : Max depth reached or no more possible moves
+#     if depth == max_depth:
+#         node.value = heuristic(node.own_pieces, node.enemy_pieces, node.size, table)
+#         return node
+#
+#     if not node.visited:
+#         node.expand()
+#     if not node.moves:
+#         node.value = heuristic(node.own_pieces, node.enemy_pieces, node.size, table)
+#         return node
+#
+#     best = -MAX_INT
+#     best_nodes = []
+#     for move in node.moves:
+#         child = node.set_child(move)
+#         child.value = -negamax_alpha_beta(child, heuristic, max_depth,
+#                                           depth=depth + 1, alpha=-beta, beta=-alpha, table=table).value
+#
+#         if child.value > best:
+#             best = child.value
+#             best_nodes = [child]
+#             if best > alpha:
+#                 alpha = best
+#                 if alpha > beta:
+#                     return random.choice(best_nodes)
+#         elif child.value == best:
+#             best_nodes.append(child)
+#     return random.choice(best_nodes)
+
+
 def negamax_alpha_beta(node: Node, heuristic: callable, max_depth: int, depth: int = 0,
                        alpha: int = -MAX_INT, beta: int = MAX_INT, table=None) -> Node:
     """Negamax version of the MinMax Algorithm with alpha-beta pruning. Only works for pair depth."""
@@ -219,8 +251,9 @@ def negamax_alpha_beta(node: Node, heuristic: callable, max_depth: int, depth: i
 
     best = -MAX_INT
     best_nodes = []
-    for move in node.moves:
-        child = node.set_child(move)
+    if not node.children:
+        node.set_children()
+    for child in node.children:
         child.value = -negamax_alpha_beta(child, heuristic, max_depth,
                                           depth=depth + 1, alpha=-beta, beta=-alpha, table=table).value
 

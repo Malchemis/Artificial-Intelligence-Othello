@@ -1,8 +1,8 @@
 import yaml
 
 from bitwise_func import set_state, cell_count, print_board, print_pieces
-from measure import time_n, time_only   # Time measurement and Function Calls/Time Profiling
-from minmax_params import Strategy      # Enums for the strategies
+from measure import time_n, time_only  # Time measurement and Function Calls/Time Profiling
+from minmax_params import Strategy  # Enums for the strategies
 from strategies import strategy
 from visualize import cv2_display
 from Node import Node, replay
@@ -29,11 +29,11 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
     """
     error_handling(minimax_mode, mode, size)
 
-    enemy, own = init_bit_board(size)   # set the bitboards : white pieces, black pieces
-    own_root = Node(None, own, enemy, -1, size)     # -1 for black, 1 for white
+    enemy, own = init_bit_board(size)  # set the bitboards : white pieces, black pieces
+    own_root = Node(None, own, enemy, -1, size)  # -1 for black, 1 for white
     enemy_root = Node(None, own, enemy, -1, size)
 
-    nb_pieces_played = 4    # You can put this to 0 if you don't consider the starting pieces
+    nb_pieces_played = 4  # You can put this to 0 if you don't consider the starting pieces
     while True:
         if verbose == 2:
             status(own, enemy, size, own_root.turn, nb_pieces_played)
@@ -41,34 +41,31 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         # Generate the possible moves for the current player
         if not own_root.visited:
             own_root.expand()
-        if not own_root.moves:  # Verify if the other player can play*
-            if own_root.children:
-                print(own_root.children)
-            own_root.invert()   # Swap players and turn
+        # Current player can't play
+        if not own_root.moves:  # Verify if the other player can play
+            own_root.invert()  # Swap players and turn
             enemy_root = enemy_root.add_other_child(own_root)
             enemy_root.expand()
             if not enemy_root.moves:
-                break   # End the game loop : No one can play
+                break  # End the game loop : No one can play
             enemy_root, own_root = own_root, enemy_root
-            continue    # Skip the current turn since the current player can't play
+            continue  # Skip the current turn
 
-        if display:     # Display the board using OpenCV
+        if display:  # Display the board using OpenCV
             cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, own_root.turn,
                         display_only=True)
 
-        # Get the next Node from the strategy
+        # Get the next game/node from the strategy
         own_root = strategy(minimax_mode, mode, own_root, max_depth, nb_pieces_played)
 
         # We remove unused nodes to save memory (Garbage Collector)
         if own_root.parent is not None:
-            parent = own_root.parent
-            parent.children = [own_root]
-            own_root.parent = parent
+            own_root.parent.children = [own_root]
 
         # Advance the tree for the other player
         enemy_root = enemy_root.add_other_child(own_root)
-        enemy_root, own_root = own_root, enemy_root     # Swap
-        nb_pieces_played += 1   # and update metrics
+        enemy_root, own_root = own_root, enemy_root  # Swap
+        nb_pieces_played += 1  # and update metrics
 
     return (get_winner(own_root.own_pieces, own_root.enemy_pieces, verbose, own_root.turn),
             own_root.own_pieces,
@@ -152,7 +149,7 @@ def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) ->
 
 
 def main():
-    with open(f"{__file__}/../config.yaml", "r") as file:
+    with open("config.yaml", "r") as file:
         config = yaml.safe_load(file)
 
     if config["time_only"]:
