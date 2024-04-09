@@ -3,7 +3,7 @@ from typing import Any
 import numpy as np
 from numpy import signedinteger
 
-from bitwise_func import cell_count
+from utils.bitwise_func import cell_count
 from next import generate_moves
 
 

@@ -1,5 +1,5 @@
 from next import generate_moves, make_move
-from visualize import cv2_display
+from utils.visualize import cv2_display
 
 
 class Node:

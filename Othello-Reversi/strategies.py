@@ -1,8 +1,8 @@
 import random
 
 from heuristics import positional, mobility, absolute
-from minmax_params import TABLE1, TABLE2, MAX_INT, Strategy
-from visualize import cv2_display
+from utils.minmax_params import TABLE1, TABLE2, MAX_INT, Strategy
+from utils.visualize import cv2_display
 
 from node import Node
 
