@@ -1,5 +1,5 @@
 from next import generate_moves, make_move
-from utils.visualize import cv2_display
+from ..utils.visualize import cv2_display
 
 
 class Node:
@@ -63,7 +63,7 @@ class Node:
         return f"{self.own_pieces}, {self.enemy_pieces}, {self.turn}"
 
 
-def replay(node: Node, size: int) -> None:
+def replay(node: Node, size: int, verbose=False) -> list:
     """Replay the game based on the moves of the Node by backtracking the tree and using a LIFO queue"""
     game = []
     count_child = 0
@@ -75,10 +75,12 @@ def replay(node: Node, size: int) -> None:
     for node in game:
         if not node.moves:
             node.moves = generate_moves(node.own_pieces, node.enemy_pieces, size)[0]
-        print("-------------")
-        print(node)
-        print(node.moves)
-        print(node.value)
-        cv2_display(size, node.own_pieces, node.enemy_pieces, node.moves, node.turn, display_only=True)
-        print("Press Enter to continue...", end="")
-        input()
+        if verbose:
+            print("-------------")
+            print(node)
+            print(node.moves)
+            print(node.value)
+            cv2_display(size, node.own_pieces, node.enemy_pieces, node.moves, node.turn, display_only=True)
+            print("Press Enter to continue...", end="")
+            input()
+    return game

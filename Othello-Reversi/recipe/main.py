@@ -1,12 +1,12 @@
 import yaml
 
 from game import othello
-from utils.measure import time_n, time_only
 from node import replay
+from ..utils.measure import time_n, time_only
 
 
 def main():
-    with open("config.yaml", "r") as file:
+    with open("../config.yaml", "r") as file:
         config = yaml.safe_load(file)
 
     if config["time_only"]:

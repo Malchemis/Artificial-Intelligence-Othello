@@ -1,10 +1,9 @@
 import random
 
 from heuristics import positional, mobility, absolute
-from utils.minmax_params import TABLE1, TABLE2, MAX_INT, Strategy
-from utils.visualize import cv2_display
-
 from node import Node
+from ..utils.minmax_params import TABLE1, TABLE2, MAX_INT, Strategy
+from ..utils.visualize import cv2_display
 
 
 def strategy(minimax_mode: tuple, mode: tuple, node: Node, max_depth: int, nb_pieces_played) -> Node:

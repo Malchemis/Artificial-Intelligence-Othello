@@ -1,8 +1,8 @@
-from strategies import strategy
 from node import Node
-from utils.minmax_params import Strategy  # Enums for the strategies
-from utils.bitwise_func import set_state, cell_count, print_board, print_pieces
-from utils.visualize import cv2_display
+from strategies import strategy
+from ..utils.bitwise_func import set_state, cell_count, print_board, print_pieces
+from ..utils.minmax_params import Strategy  # Enums for the strategies
+from ..utils.visualize import cv2_display
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
