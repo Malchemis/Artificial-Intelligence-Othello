@@ -1,0 +1,19 @@
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\renewcommand{\headrule}{}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{}
+\rfoot{\thepage}
+
+% Set the font size for the cover page to 12pt
+\fontsize{12pt}{14pt}\selectfont
+
+\AtBeginDocument{\input{cover/cover_in.tex}}
+
+\AtEndDocument{\input{cover/cover_out.tex}}
+
+% Reset the font size to 11pt
+\fontsize{11pt}{13pt}\selectfont
