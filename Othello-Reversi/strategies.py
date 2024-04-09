@@ -4,7 +4,7 @@ from heuristics import positional, mobility, absolute
 from minmax_params import TABLE1, TABLE2, MAX_INT, Strategy
 from visualize import cv2_display
 
-from Node import Node
+from node import Node
 
 
 def strategy(minimax_mode: tuple, mode: tuple, node: Node, max_depth: int, nb_pieces_played) -> Node:

@@ -1,11 +1,8 @@
-import yaml
-
-from bitwise_func import set_state, cell_count, print_board, print_pieces
-from measure import time_n, time_only  # Time measurement and Function Calls/Time Profiling
-from minmax_params import Strategy  # Enums for the strategies
 from strategies import strategy
-from visualize import cv2_display
-from Node import Node, replay
+from node import Node
+from utils.minmax_params import Strategy  # Enums for the strategies
+from utils.bitwise_func import set_state, cell_count, print_board, print_pieces
+from utils.visualize import cv2_display
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
@@ -146,28 +143,3 @@ def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) ->
     print(f"{white_pieces:064b}")
     print(f"{black_pieces:064b}")
     print(white_pieces | black_pieces)
-
-
-def main():
-    with open("config.yaml", "r") as file:
-        config = yaml.safe_load(file)
-
-    if config["time_only"]:
-        time_only(othello, config["n"], (config["minimax_mode"], config["mode"], config["size"], config["max_depth"],
-                                         config["display"], config["verbose"]))
-        return
-
-    wins, onsets, offsets, nb_pieces_played_sum, nodes = time_n(
-        othello,
-        config["n"],
-        (config["minimax_mode"], config["mode"], config["size"], config["max_depth"], config["display"],
-         config["verbose"]),
-        profile=config["profile"]
-    )
-
-    if config["replay"]:
-        replay(nodes[0], config["size"])
-
-
-if __name__ == "__main__":
-    main()
