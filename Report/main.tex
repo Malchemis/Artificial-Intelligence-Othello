@@ -1,0 +1,44 @@
+\documentclass[a4paper,11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{boldline,multirow,tabularx,colortbl,diagbox,makecell,fancybox}
+\usepackage{amsfonts,amssymb,amsmath,mathrsfs,array,stmaryrd}
+\usepackage{pgf,tikz,xcolor}
+\usetikzlibrary{calc,positioning,shapes.geometric,shapes.symbols,shapes.misc, fit, calc, shapes, arrows, arrows.meta,fadings,through}
+\usepackage[top=3cm, bottom=3cm, left=3cm, right=3cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\usepackage[french]{babel}
+\usepackage{appendix,listings,enumerate}
+\usepackage{ifluatex}
+\usepackage[backend=biber, sorting=none, style=alphabetic]{biblatex}
+\usepackage{csquotes}
+\usepackage[printonlyused]{acronym}
+\addbibresource{refs/bibliography.bib}
+
+\usepackage{indentfirst}
+\usepackage{notoccite}
+
+\usepackage[nodayofweek,level]{datetime}
+
+\usepackage{dirtree}
+\usepackage{forest}
+\usepackage{pdfpages}
+
+\usepackage{booktabs}
+\usepackage{caption}
+
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newtheorem{definition}{Definition}
+
+\input{variables}
+\input{advanced.params/misc.commands}
+\input{advanced.params/titlevars.tex}
+\input{cover/covermain.tex}
+
+\begin{document}
+\input{content/__all__.tex}
+\end{document}

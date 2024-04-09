@@ -1,14 +1,15 @@
 import yaml
 
 from bitwise_func import set_state, cell_count, print_board, print_pieces
-from measure import profile_n, time_n  # Time measurement and Function Calls/Time Profiling
+from measure import time_n, time_only  # Time measurement and Function Calls/Time Profiling
 from minmax_params import Strategy  # Enums for the strategies
-from next import generate_moves, make_move
 from strategies import strategy
+from visualize import cv2_display
+from Node import Node, replay
 
 
 def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
-            display: bool = False, verbose: bool = False, save_moves: bool = False) -> tuple[int, int, int, int]:
+            display: bool = False, verbose: bool = False) -> tuple[int, int, int, int, Node]:
     """
     Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
     pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces
@@ -22,39 +23,55 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
         max_depth (int, optional): max depth of the search tree. Defaults to 4.
         display (bool, optional): display the board for the bots. Defaults to False.
         verbose (bool, optional): print the winner. Defaults to False.
-        save_moves (bool, optional): save the moves as knowledge for each player (separately). Defaults to False.
 
     Returns:
         tuple[int, int, int]: return code, white pieces, black pieces
     """
     error_handling(minimax_mode, mode, size)
-    enemy, own = init_bit_board(size)  # set the bit board : white pieces, black pieces
-    turn = -1  # Black starts
 
-    nb_pieces_played = 0
+    enemy, own = init_bit_board(size)  # set the bitboards : white pieces, black pieces
+    own_root = Node(None, own, enemy, -1, size)  # -1 for black, 1 for white
+    enemy_root = Node(None, own, enemy, -1, size)
 
+    nb_pieces_played = 4  # You can put this to 0 if you don't consider the starting pieces
     while True:
         if verbose == 2:
-            status(own, enemy, size, turn)
+            status(own, enemy, size, own_root.turn, nb_pieces_played)
 
         # Generate the possible moves for the current player
-        moves, directions = generate_moves(own, enemy, size)
-
-        if not moves:  # Verify if the other player can play
-            if not generate_moves(enemy, own, size)[0]:
+        if not own_root.visited:
+            own_root.expand()
+        # Current player can't play
+        if not own_root.moves:  # Verify if the other player can play
+            own_root.invert()  # Swap players and turn
+            enemy_root = enemy_root.add_other_child(own_root)
+            enemy_root.expand()
+            if not enemy_root.moves:
                 break  # End the game loop : No one can play
-            own, enemy = enemy, own  # swap the players
-            turn *= -1
-            continue  # Skip the current turn as the current player can't play
+            enemy_root, own_root = own_root, enemy_root
+            continue  # Skip the current turn
 
-        # Get the next move and play it
-        next_move = strategy(minimax_mode, mode, own, enemy, moves, turn, display, size, max_depth, save_moves,
-                             nb_pieces_played)
-        enemy, own = make_move(own, enemy, next_move, directions)  # Swap the pieces after the move
-        turn *= -1
-        nb_pieces_played += 1
+        if display:  # Display the board using OpenCV
+            cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, own_root.turn,
+                        display_only=True)
 
-    return get_winner(own, enemy, verbose, turn), own, enemy, turn
+        # Get the next game/node from the strategy
+        own_root = strategy(minimax_mode, mode, own_root, max_depth, nb_pieces_played)
+
+        # We remove unused nodes to save memory (Garbage Collector)
+        if own_root.parent is not None:
+            own_root.parent.children = [own_root]
+
+        # Advance the tree for the other player
+        enemy_root = enemy_root.add_other_child(own_root)
+        enemy_root, own_root = own_root, enemy_root  # Swap
+        nb_pieces_played += 1  # and update metrics
+
+    return (get_winner(own_root.own_pieces, own_root.enemy_pieces, verbose, own_root.turn),
+            own_root.own_pieces,
+            own_root.enemy_pieces,
+            nb_pieces_played,
+            own_root)
 
 
 def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:
@@ -119,8 +136,9 @@ def get_winner(own_pieces: int, enemy_pieces: int, verbose: bool, turn: int) -> 
     return 0
 
 
-def status(own: int, enemy: int, size: int, turn: int) -> None:
-    print("Turn: " + ("Black" if turn == -1 else "White"))
+def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) -> None:
+    str_status = "Black" if turn == -1 else "White"
+    print(f"Turn: {str_status}, Pieces played: {nb_pieces_played}")
     white_pieces, black_pieces = (own, enemy) if turn == 1 else (enemy, own)
     print_board(white_pieces, black_pieces, size)
     print_pieces(white_pieces, size)
@@ -131,18 +149,24 @@ def status(own: int, enemy: int, size: int, turn: int) -> None:
 
 
 def main():
-    with open(f"{__file__}/../config.yaml", "r") as file:
+    with open("config.yaml", "r") as file:
         config = yaml.safe_load(file)
-    minimax_mode = (int(config["minimax_mode"][0]), int(config["minimax_mode"][1]))
-    mode = (int(config["mode"][0]), int(config["mode"][1]))
-    size = int(config["size"])
-    max_depth = int(config["max_depth"])
-    display = config["display"]
-    verbose = config["verbose"]
-    save_moves = config["save_moves"]
 
-    time_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose, save_moves))
-    profile_n(othello, config["n"], (minimax_mode, mode, size, max_depth, display, verbose, save_moves))
+    if config["time_only"]:
+        time_only(othello, config["n"], (config["minimax_mode"], config["mode"], config["size"], config["max_depth"],
+                                         config["display"], config["verbose"]))
+        return
+
+    wins, onsets, offsets, nb_pieces_played_sum, nodes = time_n(
+        othello,
+        config["n"],
+        (config["minimax_mode"], config["mode"], config["size"], config["max_depth"], config["display"],
+         config["verbose"]),
+        profile=config["profile"]
+    )
+
+    if config["replay"]:
+        replay(nodes[0], config["size"])
 
 
 if __name__ == "__main__":

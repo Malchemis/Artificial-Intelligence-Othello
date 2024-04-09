@@ -1,10 +1,8 @@
 # Number of iterations for the time measurement
-n: 10000
+n: 100
 
 # Maximum depth of the search tree (minimax algorithm)
-max_depth: 6
-# Whether to save the generated moves in a dict to save time
-save_moves: False
+max_depth: 4
 
 # Who plays against who.
 # 0: human.
@@ -13,7 +11,7 @@ save_moves: False
 # 4: absolute (minimizes/maximizes the number of pieces for the opponent/player),
 # 5: mobility (minimizes/maximizes the number of possible moves for the opponent/player),
 # 6: mixed with TABLE1, 7: mixed with TABLE2. Mixed signifies using positional, then mobility, then absolute.
-mode: [1, 1]
+mode: [2, 2]
 
 # Which MiniMax version to use.
 # 0: Default MiniMax
@@ -27,5 +25,15 @@ size: 8
 
 # Whether to display the board with a graphical interface
 display: False
+
 # Whether to print the result of a game
-verbose: 0  # Verbose levels : 0: no print, 1: print only the result, 2: print the result and the boards
+verbose: 0  # Verbose levels : 0: no print, 1: print only the result, 2: print the result and the boards after each turn
+
+# Whether to only measure the time of the algorithm
+time_only: False
+
+# Whether to profile the code
+profile: False
+
+# Whether to visualize a replay of the game
+replay: False

@@ -5,11 +5,18 @@
       <excludeFolder url="file://$MODULE_DIR$/.idea/copilot" />
       <excludeFolder url="file://$MODULE_DIR$/.idea/copilot/chatSessions" />
     </content>
-    <orderEntry type="jdk" jdkName="ProjectsIA" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="AIproject" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="GOOGLE" />
     <option name="myDocStringFormat" value="Google" />
+  </component>
+  <component name="PyNamespacePackagesService">
+    <option name="namespacePackageFolders">
+      <list>
+        <option value="$MODULE_DIR$/Othello - Reversi" />
+      </list>
+    </option>
   </component>
 </module>

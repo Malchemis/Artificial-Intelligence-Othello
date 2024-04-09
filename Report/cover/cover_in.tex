@@ -1,0 +1,33 @@
+\pagenumbering{gobble}
+%\makeatletter
+\noindent\begin{tikzpicture}[remember picture, overlay, shift={(current page.south west)}]
+    %Images
+    \node[anchor=north west] at (1.35,23.7) {\includegraphics[height=1.6cm, keepaspectratio]{cover/meta/insa-logo.png}};
+    \node[anchor=north east] at (19.65,23.8) {\includegraphics[height=1.8cm, keepaspectratio]{cover/meta/uphf-logo.png}};
+    
+    \node[above = 340pt of current page.center] (rapport) {\LARGE{\textsc{Ministère de l'enseignement supérieur et de la recherche}}};
+    \node[above = 280pt of current page.center] (rapport) {
+        \begin{tabular}{c}
+            \huge{\textsc{\textbf{I}nstitut \textbf{N}ational des \textbf{S}ciences \textbf{A}ppliquées}} \\ \huge{\textsc{des \textbf{H}auts-de-\textbf{F}rance}}
+        \end{tabular}
+    };
+        
+    % Textes
+    \node[below = 10pt of current page.center] (ptitle) {\parbox{\textwidth}{\centering\huge{\textsc{\projecttitle}}}};
+    \node[above = 12.5pt of ptitle.north] {\rule{15cm}{0.25mm}};
+    \node[below = 12.5pt of ptitle.south] {\rule{15cm}{0.25mm}};
+    
+    \node[above = 90pt of ptitle] {\LARGE{\textbf{\departement}}};
+    
+    \node[above = 40pt of ptitle] {\huge{\textsc{\textbf{Rapport des Travaux Pratiques}}}};
+
+    % Adding the Supervisor Title and Name just below the Date of defence
+    \node[below = 5pt of ptitle, xshift = 1.3cm] at (14.7, 10) (pdate){\large{\textbf{Date:} 15 Avril 2024}};
+    \node[below = 5pt of pdate, xshift = -1.3cm] (supervisorstitle) {\large{\textbf{Professeur:} \supervisor}};
+    
+    \node[anchor = south west, xshift = 0.65cm] at (2,2) (pstudents) {\large{\centering\begin{tabular}{lllll}\students\end{tabular}}};
+
+\end{tikzpicture}
+
+\newpage
+\blankpage

@@ -34,7 +34,7 @@ def generate_moves(own, enemy, size) -> tuple[list, dict]:
     return unique_moves, dir_jump
 
 
-def make_move(own, enemy, move_to_play, directions):
+def make_move(own: int, enemy: int, move_to_play: int, directions: dict) -> tuple[int, int]:
     """Make the move and update the board using bitwise operations."""
     for direction, count in directions[move_to_play]:
         victims = move_to_play  # Init the victims with the move to play

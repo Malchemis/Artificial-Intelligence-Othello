@@ -16,14 +16,13 @@ def positional(own: int, enemy: int, size: int, table: np.ndarray) -> signedinte
         size (int): size of the board
         table (np.ndarray): table of values for the heuristic
     """
-    # Convert the binary representations to boolean masks
-    enemy_mask = np.array([bool(enemy & (1 << i)) for i in range(size * size)])
-    own_mask = np.array([bool(own & (1 << i)) for i in range(size * size)])
-
-    # Apply the masks to the table and sum the values
-    sum1 = np.sum(table[own_mask])
-    sum2 = np.sum(table[enemy_mask])
-
+    sum1 = 0
+    sum2 = 0
+    for i in range(size * size):
+        if own & (1 << i):
+            sum1 += table[i]
+        elif enemy & (1 << i):
+            sum2 += table[i]
     return sum1 - sum2
 
 
