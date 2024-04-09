@@ -1,7 +1,7 @@
-IA - Fondements Repository
+Artificial Intelligence Repository
 ==========================
 
-Welcome to the **IA - Fondements** (french for AI - Basis) repository! This repository serves as a collection point for various projects related to Artificial Intelligence fundamentals. The projects included here are developed as part of a course, covering topics such as algorithmic complexity, search algorithms, machine learning techniques, and more.
+Welcome to the **Artificial Intelligence** repository! This repository serves as a collection point for various projects related to Artificial Intelligence fundamentals. The projects included here are developed as part of a course, covering topics such as algorithmic complexity, search algorithms, machine learning techniques, and more. The Report is in French, as it's my native language and it was mandatory.
 
 About the Course
 ----------------
