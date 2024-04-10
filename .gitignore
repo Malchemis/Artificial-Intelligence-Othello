@@ -1,7 +1,7 @@
 .idea/
 Othello-Reversi/data/
 Othello-Reversi/__pycache__/
-Othello-Reversi/misc/__pycache__/utils.cpython-311.pyc
+Othello-Reversi/saved_games/
 Report/main.aux
 Report/main.bcf
 Report/main.lof
@@ -13,5 +13,3 @@ Report/main.bbl
 Report/main.blg
 Report/main.synctex.gz
 Report/main.toc
-Othello-Reversi/utils/__pycache__/__init__.cpython-311.pyc
-Othello-Reversi/utils/__pycache__/visualize.cpython-311.pyc

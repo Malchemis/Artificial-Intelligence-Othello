@@ -5,7 +5,8 @@ from utils.minmax_params import Strategy  # Enums for the strategies
 from utils.visualize import cv2_display
 
 
-def othello(mode: tuple, minimax_mode: tuple, max_depth: int, h_table: tuple, thresholds: tuple, size: int, display: bool, verbose: int, stats_path: str) -> tuple[int, int, int, int, Node]:
+def othello(mode: tuple, minimax_mode: tuple, max_depth: tuple, h_table: tuple, thresholds: tuple, size: int,
+            display: bool, verbose: int, stats_path: str) -> tuple[int, int, int, int, Node]:
     """
     Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
     pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces
@@ -15,7 +16,7 @@ def othello(mode: tuple, minimax_mode: tuple, max_depth: int, h_table: tuple, th
     Args:
         mode (tuple): describe the strategy and the player type.
         minimax_mode (tuple): describe the minimax version.
-        max_depth (int): max depth of the search.
+        max_depth (tuple): max depth of the search.
         h_table (tuple): heuristic table to use.
         thresholds (tuple): threshold for the mixed strategy.
         size (int): size of the board.
@@ -55,7 +56,8 @@ def othello(mode: tuple, minimax_mode: tuple, max_depth: int, h_table: tuple, th
                         display_only=True)
 
         # Get the next game/node from the strategy
-        own_root = strategy(own_root, mode, minimax_mode, max_depth, h_table, thresholds, display, verbose, stats_path, nb_pieces_played)
+        own_root = strategy(own_root, mode, minimax_mode, max_depth, h_table, thresholds, verbose, stats_path,
+                            nb_pieces_played)
 
         # We remove unused nodes to save memory (Garbage Collector)
         if own_root.parent is not None:
@@ -80,6 +82,7 @@ def error_handling(minimax_mode: tuple, mode: tuple, h_table: tuple, size: int) 
     Args:
         minimax_mode (tuple): describe the version to use for the minimax algorithm.
         mode (tuple): describe the strategy and the player type.
+        h_table (tuple): heuristic table to use.
         size (int): size of the board
     """
     if size < 4:
@@ -108,13 +111,13 @@ def init_bit_board(size) -> tuple[int, int]:
     return white_pieces, black_pieces
 
 
-def get_winner(own_pieces: int, enemy_pieces: int, verbose: bool, turn: int) -> int:
+def get_winner(own_pieces: int, enemy_pieces: int, verbose: int, turn: int) -> int:
     """Print the winner and return the code of the winner
 
     Args:
         own_pieces (int): the pieces of the current player
         enemy_pieces (int): the pieces of the other player
-        verbose (bool): print or not the winner
+        verbose (int): print or not the winner
         turn (int): the current player
     
     Returns:

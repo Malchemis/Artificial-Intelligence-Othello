@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from bitwise_func import get_indexes_move
+from .bitwise_func import get_indexes_move
 
 HEIGHT = 600
 WIDTH = 600

@@ -5,10 +5,21 @@ import os
 from game import othello
 from node import replay
 from utils.measure import time_n, time_only
+from utils.minmax_params import Strategy
 
 
-def main():
-    with open("../config.yaml", "r") as file:
+def experiment_run():
+    """Test multiple configurations using grid search.
+    The objective is to analyse performance relative to algorithms, depth, heuristics, etc."""
+    n_iterations = 10
+    default_minimax_strategy = Strategy.NEGAMAX_ALPHA_BETA
+    algorithms = [Strategy.RANDOM, Strategy.POSITIONAL, Strategy.ABSOLUTE, Strategy.MOBILITY, Strategy.MIXED]
+    depths = [2, 4, 6]
+    h_tables = [1, 2]  # table 1 or 2, only for POSITIONAL and MIXED
+
+
+def default_run():
+    with open("config.yaml", "r") as file:
         config = yaml.safe_load(file)
         
     params = (
@@ -42,4 +53,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    default_run()

@@ -6,17 +6,16 @@ from utils.minmax_params import TABLE1, TABLE2, MAX_INT, Strategy, Heuristic
 from utils.visualize import cv2_display
 
 
-def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: int, h_table: tuple, thresholds: tuple, verbose: int, stats_path: str, nb_pieces_played: int) -> Node:
+def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: tuple, h_table: tuple, thresholds: tuple, verbose: int, stats_path: str, nb_pieces_played: int) -> Node:
     """Return the next move based on the strategy.
 
     Args:
         node (Node): the root node of the search tree.
         mode (tuple): describe the strategy and the player type.
         minimax_mode (tuple): describe the minimax version.
-        max_depth (int): max depth of the search.
+        max_depth (tuple): max depth of the search. (tuple to allow different depths for each player)
         h_table (tuple): heuristic table to use.
         thresholds (tuple): threshold for the mixed strategy.
-        display (bool): display the board.
         verbose (int): verbose level.
         stats_path (str): path to save the stats.
         nb_pieces_played (int): number of pieces played.
@@ -46,7 +45,9 @@ def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: int, h_tab
     # Define which strategy to use
     heuristic_to_use = which_strategy(player, nb_pieces_played, thresholds)
 
-    return func_to_use(node, heuristic_to_use, max_depth=max_depth, table=table_to_use)
+    # Define the max depth to use
+    max_depth_to_use = max_depth[0] if node.turn == -1 else max_depth[1]
+    return func_to_use(node, heuristic_to_use, max_depth=max_depth_to_use, table=table_to_use)
 
 
 def which_mode(mode: tuple, minimax_mode: tuple, h_table, turn: int) -> tuple:

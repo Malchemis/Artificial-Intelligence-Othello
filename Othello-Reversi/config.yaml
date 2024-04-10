@@ -9,13 +9,14 @@ profile: False
 replay: 0 # 0: no replay, 1: replay the last game, 2: replay the last game with display
 
 # Save games to pickle file
-save: "../saved_games" # default to Othello-Reversi/saved_games/
+#save: "../saved_games" # default to Othello-Reversi/saved_games/
+save: False
 
 # Path to statistics file
 stats_path: "../stats.csv" # default to Othello-Reversi/stats.csv
 
 # Number of games
-n: 100
+n: 20
 
 ### Game Parameters ###
 # Who plays against who.
@@ -25,7 +26,7 @@ n: 100
 # 3: absolute (minimizes/maximizes the number of pieces for the opponent/player),
 # 4: mobility (minimizes/maximizes the number of possible moves for the opponent/player),
 # 5: mixed (uses a heuristic table to define the quality of a position). Mixed signifies using positional, then mobility, then absolute.
-mode: [2, 2]
+mode: [5, 2]
 
 # Which MiniMax version to use.
 # 0: Default MiniMax
@@ -35,7 +36,7 @@ mode: [2, 2]
 minimax_mode: [3, 3]
 
 # Maximum depth of the search tree (minimax algorithm)
-max_depth: [4, 4]
+max_depth: [6, 6]
 
 # Which heuristic table to use.
 # 0: Default if mode is 2 or 6, else None
@@ -44,11 +45,10 @@ max_depth: [4, 4]
 h_table: [1, 1]
 
 # Threshold for when to switch strategies if mode is 6. 
-threshold: [15, 45] # Default is used if impossible values are given
-# Default = [15, 45]
+threshold: [15, 45] # Default = [15, 45]
 
 # Size of the board
-size: 8 # The program is not yeted fully tested with other sizes than 8
+size: 8 # The program is not yet fully tested with other sizes than 8
 
 # Whether to display the board with a graphical interface
 display: False

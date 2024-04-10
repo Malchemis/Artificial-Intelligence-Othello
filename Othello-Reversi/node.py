@@ -62,6 +62,9 @@ class Node:
     def __str__(self):
         return f"{self.own_pieces}, {self.enemy_pieces}, {self.turn}"
 
+    def __hash__(self):
+        return hash((self.own_pieces, self.enemy_pieces, self.turn))
+
 
 def replay(node: Node, size: int, verbose=False) -> list:
     """Replay the game based on the moves of the Node by backtracking the tree and using a LIFO queue"""
