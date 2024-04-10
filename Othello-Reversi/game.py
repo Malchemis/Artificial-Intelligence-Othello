@@ -1,12 +1,11 @@
 from node import Node
 from strategies import strategy
-from ..utils.bitwise_func import set_state, cell_count, print_board, print_pieces
-from ..utils.minmax_params import Strategy  # Enums for the strategies
-from ..utils.visualize import cv2_display
+from utils.bitwise_func import set_state, cell_count, print_board, print_pieces
+from utils.minmax_params import Strategy  # Enums for the strategies
+from utils.visualize import cv2_display
 
 
-def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
-            display: bool = False, verbose: bool = False) -> tuple[int, int, int, int, Node]:
+def othello(mode: tuple, minimax_mode: tuple, max_depth: int, h_table: tuple, thresholds: tuple, size: int, display: bool, verbose: int, stats_path: str) -> tuple[int, int, int, int, Node]:
     """
     Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
     pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces
@@ -14,17 +13,20 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
 
 
     Args:
-        minimax_mode (tuple): describe the strategy and the player type. First element is Black, and second is White.
-        mode (tuple): describe the strategy and the player type. First element is Black, and second is White.
-        size (int, optional): size of the board. Defaults to 8.
-        max_depth (int, optional): max depth of the search tree. Defaults to 4.
-        display (bool, optional): display the board for the bots. Defaults to False.
-        verbose (bool, optional): print the winner. Defaults to False.
+        mode (tuple): describe the strategy and the player type.
+        minimax_mode (tuple): describe the minimax version.
+        max_depth (int): max depth of the search.
+        h_table (tuple): heuristic table to use.
+        thresholds (tuple): threshold for the mixed strategy.
+        size (int): size of the board.
+        display (bool): display the board.
+        verbose (int): verbose level.
+        stats_path (str): path to save the stats.
 
     Returns:
         tuple[int, int, int]: return code, white pieces, black pieces
     """
-    error_handling(minimax_mode, mode, size)
+    error_handling(minimax_mode, mode, h_table, size)
 
     enemy, own = init_bit_board(size)  # set the bitboards : white pieces, black pieces
     own_root = Node(None, own, enemy, -1, size)  # -1 for black, 1 for white
@@ -53,7 +55,7 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
                         display_only=True)
 
         # Get the next game/node from the strategy
-        own_root = strategy(minimax_mode, mode, own_root, max_depth, nb_pieces_played)
+        own_root = strategy(own_root, mode, minimax_mode, max_depth, h_table, thresholds, display, verbose, stats_path, nb_pieces_played)
 
         # We remove unused nodes to save memory (Garbage Collector)
         if own_root.parent is not None:
@@ -71,7 +73,7 @@ def othello(minimax_mode: tuple, mode: tuple, size: int = 8, max_depth: int = 4,
             own_root)
 
 
-def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:
+def error_handling(minimax_mode: tuple, mode: tuple, h_table: tuple, size: int) -> int:
     """
     Check if the input parameters are correct
 
@@ -85,14 +87,15 @@ def error_handling(minimax_mode: tuple, mode: tuple, size: int) -> int:
     if size % 2 != 0:
         raise ValueError("Size must be an even number")
 
-    if not all(Strategy.HUMAN <= m <= Strategy.MIXED_TABLE2 for m in mode):
+    if not all(Strategy.HUMAN <= m <= Strategy.MIXED for m in mode):
         raise NotImplementedError("Invalid mode")
     if not all(Strategy.MINIMAX <= m <= Strategy.NEGAMAX_ALPHA_BETA for m in minimax_mode):
         raise NotImplementedError("Invalid minimax mode")
+    if not all(0 <= h < 2 for h in h_table):
+        raise NotImplementedError("Invalid heuristic table")
 
-    if size != 8 and any(mode) in [Strategy.POSITIONAL_TABLE1, Strategy.POSITIONAL_TABLE2, Strategy.MIXED_TABLE1,
-                                   Strategy.MIXED_TABLE2]:
-        raise ValueError("Size must be 8 to use heuristic tables (TABLE1, TABLE2 are used by {2, 3, 6, 7})")
+    if size != 8:
+        raise NotImplementedError("Only 8x8 board is supported for now")
     return 0
 
 

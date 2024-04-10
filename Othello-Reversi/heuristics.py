@@ -4,7 +4,7 @@ import numpy as np
 from numpy import signedinteger
 
 from next import generate_moves
-from ..utils.bitwise_func import cell_count
+from utils.bitwise_func import cell_count
 
 
 def positional(own: int, enemy: int, size: int, table: np.ndarray) -> signedinteger[Any]:

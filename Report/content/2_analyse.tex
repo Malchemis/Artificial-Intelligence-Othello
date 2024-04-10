@@ -1,17 +1,8 @@
 \chapter{Analyse}
 \label{chap:anal}
-Dans cette section, nous décrivons la modélisation du jeu et les algorithmes développés. Les principales particularités de notre implémentation sont les suivantes :
-\begin{itemize}
-    \item Représentation binaire du plateau de jeu, des pions et des coups valides.
-    \item Algorithmes de recherche Minimax, Alpha-Beta (avec ou sans Negamax)
-    \item Fonction d'évaluation basée sur des heuristiques
-    \item La possibilité de faire jouer n'importe quel algorithme contre un autre, ou contre un joueur humain.
-    \item Classifieur pour prédire le résultat d'une partie en cours. Ce dernier peut également être utiliser pour évaluer la qualité d'une position.
-\end{itemize}
+Notre implémentation comprend notamment une représentation binaire, aussi appelé Bitboard, les algorithmes de recherches Minimax et Alpha-Beta, et un classifieur pour prédire le résultat d'une partie en cours. Nous détaillons également les structures de données utilisées, et les algorithmes de décalage pour les coups valides. Nous avons réalisé ce projet en Python, pour des raisons de simplicité et de rapidité de développement, notamment à propos de la visualisation, et du développement du modèle de deep learning via PyTorch\footnote{PyTorch est une bibliothèque de tenseurs optimisée pour l'apprentissage profond. Voir \href{https://pytorch.org/docs/stable/index.html}{Documentation PyTorch}.}.
 
-Nous avons réalisé ce projet en Python, pour des raisons de simplicité et de rapidité de développement, notamment à propos des tests, de la visualisation, et du développement du modèle de deep learning via PyTorch\footnote{PyTorch est une bibliothèque de tenseurs optimisée pour l'apprentissage profond. Voir \href{https://pytorch.org/docs/stable/index.html}{Documentation PyTorch}.}.
-
-Dans la littérature, un `coup` est souvent défini comme l'action des deux joueurs pendant un tour, et un `demi-coup` comme l'action d'un seul joueur. Cependant, dans le cadre de ce rapport, nous utiliserons plutôt le terme `coup` pour désigner le fait de poser un pion.
+% Dans la littérature, un `coup` est souvent défini comme l'action des deux joueurs pendant un tour, et un `demi-coup` comme l'action d'un seul joueur. Cependant, dans le cadre de ce rapport, nous utiliserons plutôt le terme `coup` pour désigner le fait de poser un pion.
 
 
 \section{Modélisation et structures de données}
@@ -19,16 +10,24 @@ Dans la littérature, un `coup` est souvent défini comme l'action des deux joue
 
 \subsection{Structure du projet}
 \label{subsec:struct}
-Le projet est structuré de la manière suivante :
-\begin{itemize}
-    \item \texttt{config.yaml} : fichier de configuration, contient les paramètres du jeu, des algorithmes, et des modèles.
-    \item \texttt{main.py} : point d'entrée du programme. Permet de réaliser des tests, lancer des parties, faire jouer des algorithmes, etc.
-    \item \texttt{game.py} : contient la logique de la boucle de jeu. Permet de lancer une partie selon les paramètres donnés.
-    \item \texttt{node.py} : contient la classe \texttt{Node}, encapsulant un état du jeu, et les informations nécessaires pour l'exploration de l'arbre de recherche, ou pour rejouer une partie.
-    \item \texttt{next.py} : contient les fonctions de calcul des coups valides, et celles pour jouer un coup.
-    \item \texttt{strategies.py} : contient les algorithmes de recherche, et retourne le plateau après jouer un coup selon la stratégie choisie.
-\end{itemize}
-D'autres fichiers sont présents dans le doissier \texttt{utils/}, contenant des fonctions utilitaires telles que les fonctions d'évaluation, de visualisation, d'opérations logiques, etc.
+\dirtree{%
+.1 \textbf{Othello-Reversi/}.
+.2 config.yaml : fichier de configuration des paramètres globaux du projet.
+.2 \textbf{recipe/}.
+.3 \texttt{main} : point d'entrée du programme, permet de réaliser des tests, lancer des parties, faire jouer des algorithmes, etc.
+.3 \texttt{game.py} : contient la logique de la boucle de jeu, permet de lancer une partie selon les paramètres donnés.
+.3 \texttt{node.py} : contient la classe $\texttt{Node}$, encapsulant un état du jeu, et les informations nécessaires pour l'exploration de l'arbre de recherche, ou pour rejouer une partie.
+.3 \texttt{strategies.py} : contient les algorithmes de recherche, et retourne le plateau après jouer un coup selon la stratégie choisie.
+.3 \texttt{next.py} : contient les fonctions de calcul des coups valides, et celles pour jouer un coup.
+.3 \texttt{heuristics.py} : contient les fonctions d'évaluation et heuristiques.
+.2 \textbf{utils/}.
+.3 \textit{Ensemble de fonctions utilitaires} telles que les fonctions d'évaluation, de visualisation, d'opérations logiques, etc.
+.2 \texttt{model\_pipeline.ipynb} : notebook Jupyter pour data preprocessing, model training, et evaluation.
+.2 \texttt{understanding\_bitboards.ipynb} : notebook Jupyter pour comprendre les bitboards, de nombreux exemples illustrent les opérations logiques.
+}\leavevmode\\
+
+Une partie peut être lancée depuis le programme \texttt{main.py}, ce dernier prendra les paramètres définies dans le fichier yaml. Par exemple, pour lancer une partie avec visualisation entre un joueur Aléatoire et un joueur Negamax-AlphaBeta, 
+
 
 \subsection{Bitboards}
 \label{subsec:bit}
@@ -49,7 +48,7 @@ Par exemple, la configuration initiale du plateau de jeu est la suivante :
     \item Les coups valides sont en $c3$, $f6$ (noirs), $c6$, $f3$ (blancs).
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}
     \centering
     \includegraphics[width=0.7\textwidth]{ressources/plateau_init.png}
     \caption{Configuration initiale du plateau de jeu. Source : \href{https://www.eothello.com/}{eOthello}.}
@@ -93,6 +92,10 @@ Avec $\sim$ l'opérateur logique 'non'.
 
 De manière générale, n'importe quel pion ou coup peut être ajouté au plateau avec l'opérateur logique 'ou'.
 
+
+\section{Algorithmes}
+\label{sec:algo}
+
 \subsubsection{Comment décaler un bitboard ?}
 \label{subsec:shift}
 Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs l'étape la plus couteuse en temps de calcul. La représentation en bitboards nous permet de calculer les coups valides de manière très efficace, en vectorisant les opérations. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis. 
@@ -121,11 +124,6 @@ Pour cela, il va nous falloir être capable de décaler un plateau entier dans l
 \end{algorithm}
 
 Les masques permettent d'éviter un débordement ou \textit{overflow}, une sortie de plateau, et de préserver les bords. Ils consistent à mettre à 0 les bits qui sont des positions sensibles dans la direction donnée. Nous obtenons ensuite $Nord-Est$, $Nord-Ouest$, $Sud-Est$, $Sud-Ouest$ en combinant les opérations précédentes. (Voir appendix \ref{app:logical_ops} pour plus de détails, ainsi que les codes python correspondant).
-
-
-
-\section{Algorithmes}
-\label{sec:algo}
 
 \subsection{Trouver les coups valides}
 \label{subsec:valid_moves}

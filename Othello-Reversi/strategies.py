@@ -2,25 +2,30 @@ import random
 
 from heuristics import positional, mobility, absolute
 from node import Node
-from ..utils.minmax_params import TABLE1, TABLE2, MAX_INT, Strategy
-from ..utils.visualize import cv2_display
+from utils.minmax_params import TABLE1, TABLE2, MAX_INT, Strategy, Heuristic
+from utils.visualize import cv2_display
 
 
-def strategy(minimax_mode: tuple, mode: tuple, node: Node, max_depth: int, nb_pieces_played) -> Node:
+def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: int, h_table: tuple, thresholds: tuple, verbose: int, stats_path: str, nb_pieces_played: int) -> Node:
     """Return the next move based on the strategy.
 
     Args:
-        minimax_mode (tuple): describe the minimax version.
-        mode (tuple): describe the strategy and the player type.
         node (Node): the root node of the search tree.
+        mode (tuple): describe the strategy and the player type.
+        minimax_mode (tuple): describe the minimax version.
         max_depth (int): max depth of the search.
+        h_table (tuple): heuristic table to use.
+        thresholds (tuple): threshold for the mixed strategy.
+        display (bool): display the board.
+        verbose (int): verbose level.
+        stats_path (str): path to save the stats.
         nb_pieces_played (int): number of pieces played.
-
+        
     Returns:
-        tuple: next move
+        Node: next board state.
     """
-    # Get the player type and the minimax version
-    player, minimax_func = which_mode(mode, minimax_mode, node.turn)
+    # Get the player type, the minimax version, the heuristic table
+    player, minimax_func, heuristic = which_mode(mode, minimax_mode, h_table, node.turn)
 
     # Human player
     if player == Strategy.HUMAN:
@@ -36,23 +41,25 @@ def strategy(minimax_mode: tuple, mode: tuple, node: Node, max_depth: int, nb_pi
     func_to_use = which_minimax(minimax_func)  # Get the minimax function to use
 
     # Define which heuristic table to use, table 1 or 2, or we don't care (for absolute/mobility) as it won't be used
-    table_to_use = TABLE1 if (player == Strategy.POSITIONAL_TABLE1 or player == Strategy.MIXED_TABLE1) else TABLE2
+    table_to_use = TABLE1 if (heuristic == Heuristic.TABLE1) else TABLE2 if (heuristic == Heuristic.TABLE2) else None
 
-    # Define which heuristic evaluation method to use
-    heuristic_to_use = which_heuristic(player, nb_pieces_played)
+    # Define which strategy to use
+    heuristic_to_use = which_strategy(player, nb_pieces_played, thresholds)
 
     return func_to_use(node, heuristic_to_use, max_depth=max_depth, table=table_to_use)
 
 
-def which_mode(mode: tuple, minimax_mode: tuple, turn: int) -> tuple:
+def which_mode(mode: tuple, minimax_mode: tuple, h_table, turn: int) -> tuple:
     """Return the player type and the minimax version to use based on the turn"""
     if turn == -1:
         player = mode[0]
         minimax_func = minimax_mode[0]
+        heuristic = h_table[0]
     else:
         player = mode[1]
         minimax_func = minimax_mode[1]
-    return player, minimax_func
+        heuristic = h_table[1]
+    return player, minimax_func, heuristic
 
 
 def which_minimax(minimax_func: int) -> callable:
@@ -67,24 +74,24 @@ def which_minimax(minimax_func: int) -> callable:
     return func_to_use
 
 
-def which_heuristic(player: int, nb_pieces_played) -> callable:
+def which_strategy(player: int, nb_pieces_played: int, thresholds: tuple) -> callable:
     """Return the heuristic function to use based on the player type"""
-    if player == Strategy.POSITIONAL_TABLE1 or player == Strategy.POSITIONAL_TABLE2:
+    if player == Strategy.POSITIONAL:
         heuristic_to_use = positional
     elif player == Strategy.ABSOLUTE:
         heuristic_to_use = absolute
     elif player == Strategy.MOBILITY:
         heuristic_to_use = mobility
     else:
-        heuristic_to_use = mixed_heuristic(nb_pieces_played)
+        heuristic_to_use = mixed_heuristic(nb_pieces_played, thresholds)
     return heuristic_to_use
 
 
-def mixed_heuristic(nb_pieces_played) -> callable:
+def mixed_heuristic(nb_pieces_played: int, thresholds: tuple) -> callable:
     """Return the heuristic function to use based on the number of pieces played"""
-    if nb_pieces_played < 15:
+    if nb_pieces_played < thresholds[0]:
         return positional
-    if nb_pieces_played < 45:
+    if nb_pieces_played < thresholds[1]:
         return mobility
     return absolute
 

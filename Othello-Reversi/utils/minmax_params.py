@@ -40,12 +40,18 @@ class Strategy:
     # Mode for the player
     HUMAN = 0
     RANDOM = 1
-    POSITIONAL_TABLE1 = 2
-    POSITIONAL_TABLE2 = 3
-    ABSOLUTE = 4
-    MOBILITY = 5
-    MIXED_TABLE1 = 6
-    MIXED_TABLE2 = 7
+    POSITIONAL = 2
+    ABSOLUTE = 3
+    MOBILITY = 4
+    MIXED = 5
 
+    def __init__(self):
+        pass
+
+class Heuristic:
+    # Heuristic evaluation functions
+    TABLE1 = 0
+    TABLE2 = 1
+    
     def __init__(self):
         pass
