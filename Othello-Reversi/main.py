@@ -11,7 +11,7 @@ def main():
     with open("../config.yaml", "r") as file:
         config = yaml.safe_load(file)
         
-    params = [
+    params = (
         config["mode"], 
         config["minimax_mode"],
         config["max_depth"], 
@@ -21,7 +21,7 @@ def main():
         config["display"], 
         config["verbose"], 
         config["stats_path"]
-        ]
+    )
 
     if config["time_only"]:
         time_only(othello, config["n"], params) # Only time the function
