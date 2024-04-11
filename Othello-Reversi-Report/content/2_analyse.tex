@@ -39,13 +39,15 @@ Plus de paramètres sont disponibles, accompagnés de leurs valeurs par défaut,
 
 \subsection{Bitboards}
 \label{subsec:bit}
-Une représentation classique d'un plateau de jeu d'Othello est une matrice de 8x8, où chaque case peut contenir trois valeurs : par exemple (-1, 0, 1) pour les pions noirs, vides et blancs respectivement. C'est une représentation intuitive, et la première approche que nous avions envisagée. Cependant, nous avons finalement opté pour une meilleure alternative, plus efficace en termes de temps et d'espace : les bitboards.
+Une représentation classique d'un plateau de jeu d'Othello est une matrice de 8x8, où chaque case peut contenir trois valeurs : par exemple (-1, 0, 1) pour les pions noirs, vides et blancs respectivement. Celle-ci est intuitive, et est la première approche que nous avions envisagée. Cependant, nous avons finalement opté pour une meilleure alternative, plus efficace en termes de temps et d'espace : les bitboards.
 
-En effet, au lieu de contenir 64 entiers de $32 bits$ chacun (soit $2048 bits$), nous pouvons encoder l'ensemble du plateau de jeu dans 2 entiers de $64 bits$ chacun (soit $128bits$). Ce qui est 16 fois moins lourd ! De plus, les opérations logiques sur les bitboards sont très rapides, un avantage supplémentaire pour les algorithmes de recherche.
+En effet, au lieu de contenir 64 entiers de $32 bits$ chacun (soit $2048 bits$), nous pouvons encoder l'ensemble du plateau de jeu dans 2 entiers de $64 bits$ chacun (soit $128bits$) : ce qui est 16 fois moins lourd ! 
+
+De plus, les opérations logiques sur les bitboards sont très rapides, un avantage supplémentaire pour les algorithmes de recherche.
 
 \subsubsection{Comment encoder un pion, un coup, ou un plateau de jeu ?}
 \label{subsubsec:enc}
-Nous pouvons en fait tous les encoder de la même manière, en utilisant un bitboard. Chaque bit représente une case du plateau, et est à 1 si la case est occupée par un pion, ou si le coup est valide. Le \ac{MSB} correspond à la case $h8$, et le \ac{LSB} à la case $a1$. Les positions sont usuellement notés de $a1$ à $h8$, où $a$ est la colonne la plus à gauche, et $1$ la ligne la plus haute. \cite{brian_rose_2005} 
+Nous pouvons en fait tous les encoder de la même manière, à travers un entier sur $64bits$. Chaque bit représente une case du plateau, sa valeur égale à 1 si elle est occupée par un pion, ou si le coup est valide. Le \ac{MSB} correspond à la case $h8$, et le \ac{LSB} à la case $a1$. Les positions sont usuellement notés de $a1$ à $h8$, où $a$ est la colonne la plus à gauche, et $1$ la ligne la plus haute. \cite{brian_rose_2005} 
 
 Par exemple, la configuration initiale du plateau de jeu est la suivante :
 \begin{itemize}
@@ -60,26 +62,27 @@ Par exemple, la configuration initiale du plateau de jeu est la suivante :
     \label{fig:init_board}
 \end{figure}
 
-Cette dernière s'encode comme suit, avec dans l'ordre, le plateau noir, puis blanc : 
-\begin{align*}
-0b00000000\_00000000\_00000000\_00001000\_00010000\_00000000\_00000000\_00000000 \\
-0b00000000\_00000000\_00000000\_00010000\_00001000\_00000000\_00000000\_00000000 \\
-\end{align*}
+Cette dernière s'encode comme suit, avec dans l'ordre, le plateau noir, puis blanc :
+
+\begin{center}
+$0b00000000\_00000000\_00000000\_00001000\_00010000\_00000000\_00000000\_00000000$ \\
+$0b00000000\_00000000\_00000000\_00010000\_00001000\_00000000\_00000000\_00000000$ \\
+\end{center}
 Ces deux entiers peuvent être réécris en hexadécimal pour une meilleure lisibilité :
 \begin{align*}
     &0x00\_00\_00\_08\_10\_00\_00\_00 \quad (noir)\\
     &0x00\_00\_00\_10\_08\_00\_00\_00 \quad (blanc)\\
 \end{align*}
 
-Il est possible de récupérer la valeur d'une case $c_{i,j}$ d'un bitboard $b$ en utilisant la formule suivante : 
+De fait, il est possible de récupérer la valeur de la case $c_{i,j}$ d'un bitboard $b$ en utilisant la formule suivante : 
 \begin{align*}
-    (b\quad \gg\quad (8\times i+j))\quad \&\quad 1
+    (b\quad \gg\quad (8\times i+j))\quad \&\quad 1, \quad \forall i,j \in \{0,\dots,7\}
 \end{align*}
 Avec $i$ la ligne, $j$ la colonne, $\gg$ l'opérateur de décalage à droite, et $\&$ l'opérateur logique '\texttt{et}'.
 
-Similairement, nous pouvons définir une case $c_{i,j}$ d'un bitboard $b$ en utilisant la formule suivante :
+Similairement, nous pouvons définir la case $c_{i,j}$ d'un bitboard $b$ en utilisant la formule suivante :
 \begin{align*}
-    b\quad |\quad (1\quad \ll\quad (8\times i+j))
+    b\quad |\quad (1\quad \ll\quad (8\times i+j)), \quad \forall i,j \in \{0,\dots,7\}
 \end{align*}
 Avec $\ll$ l'opérateur de décalage à gauche, et $|$ l'opérateur logique '\texttt{ou}'.
 
@@ -90,13 +93,18 @@ Nous obtenons toutes les pièces posées et toutes les cases vides avec les opé
 \end{align*}
 Avec $\sim$ l'opérateur logique 'non'. Les programmes équivalents en python sont donnés dans l'appendice \ref{app:logical_ops}. De manière générale, n'importe quel pion peut être ajouté au plateau avec l'opérateur logique '\texttt{ou}'. Aussi, \texttt{8} peut être remplacé par n'importe quel entier représentant la taille du plateau, ici \texttt{8x8}.
 
+\subsection{Structure Node}
+\label{subsec:node}
+
+
+
 
 \section{Algorithmes}
 \label{sec:algo}
-Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs l'étape la plus couteuse en temps de calcul. La représentation en bitboards nous permet de calculer les coups valides de manière très efficace, en vectorisant les opérations. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis.
+Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs la plus couteuse en temps de calcul. La représentation en bitboards nous permet de réaliser ces opérations de manière très efficace, comparable à une vectorisation. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis.
 \subsection{Décaler un bitboard}
 \label{subsec:shift}
-Pour réaliser cela, nous devons être capable de décaler un plateau entier dans les 8 directions cardinales. Nous y parvenons en utilisant les opérations logiques suivantes :
+Pour réaliser cela, nous devons être capable de décaler un plateau entier dans les 8 directions cardinales. Nous y parvenons tel que suit :
 \begin{algorithm}
     \caption{Opérations de décalage pour les coups valides.}
     \begin{algorithmic}[1]
@@ -124,6 +132,7 @@ Les masques permettent d'éviter un débordement ou \textit{overflow}, une sorti
 \subsection{Trouver les coups valides}
 \label{subsec:valid_moves}
 
+Pour générer les coups valides à partir d'un position donnée, nous avons besoin de la position des pions du joueur, des pions de l'adversaire, et de la taille du plateau. L'algorithme \ref{alg:gen_moves} illustre la génération des coups valides pour un joueur donné, en utilisant les opérations de décalage définies précédemment.
 \begin{algorithm}[H]
     \caption{Génération des Coups Valides avec Bitboards}
     \begin{algorithmic}[1]
@@ -133,21 +142,21 @@ Les masques permettent d'éviter un débordement ou \textit{overflow}, une sorti
         \State $sautsDir \gets \{\}$
         \ForAll{$direction$ in [$nord$, $sud$, $est$, $ouest$, $nord\_ouest$, $\dots$, $sud\_est$]}
             \State $compteur \gets 0$
-            \State $victimes \gets direction(joueur) \land ennemi$
+            \State $victimes \gets direction(joueur) \,\, \& \,\, ennemi$
             \If{$victimes = \text{faux}$}
                 \State \textbf{continue}
             \EndIf
             \For{$i \gets 1$ \textbf{to} $taille$}
                 \State $compteur \gets compteur + 1$
-                \State $prochainePiece \gets direction(victimes) \land ennemi$
+                \State $prochainePiece \gets direction(victimes) \,\, \& \,\, ennemi$
                 \If{$prochainePiece = \text{faux}$}
                     \State \textbf{break}
                 \EndIf
                 \State $victimes \gets victimes \lor prochainePiece$
             \EndFor
-            \State $captures \gets direction(victimes) \land casesVides$
+            \State $captures \gets direction(victimes) \,\, \& \,\, casesVides$
             \While{$captures \neq 0$}
-                \State $capture \gets captures \land -captures$
+                \State $capture \gets captures \,\, \& \,\, -captures$
                 \State $captures \gets captures \oplus capture$
                 \If{$capture \notin sautsDir$}
                     \State Ajouter $capture$ à $coupsUniques$
@@ -159,8 +168,66 @@ Les masques permettent d'éviter un débordement ou \textit{overflow}, une sorti
         \State \Return $coupsUniques$, $sautsDir$
     \EndFunction
     \end{algorithmic}
+    \label{alg:gen_moves}
 \end{algorithm}
+
+L'objectif de cette fonction est de remplir une liste de coups possible, mais également de stocker les informations nécessaires pour réaliser ces coups. À cette fin, nous remplissons dans une table de transposition\footnote{un simple de dictionnaire en Python} pour chaque coup trouvé, une liste de couples `nombre de sauts` et `direction`. Nous pouvons décomposer l'algorithme \ref{alg:gen_moves} en plusieurs étapes :
+\begin{enumerate}
+    \item Calculer les cases vides et initiliser les 2 structures à retourner (lignes 2-4).
+    \item Pour chaque direction, trouver les pions de l'adversaire qui sont des candidats pour être capturés (lignes 7-10). Un ensemble de pions est candidat si son intersection avec les pions adverses n'est pas vide.
+    \item Tant qu'au moins un pion est candidat, continuer de décaler dans la direction donnée, et ajouter les candidats à la liste des victimes, en mettant à jour la métrique du nombre de saut (lignes 11-18).
+    \item Vérifier si les candidats peuvent être capturés en vérifiant l'intersection avec la liste des cases vides (lignes 19).
+\end{enumerate}
+À ce niveau, nous avons obtenu tous les coups valides, mais si nous voulons les jouer, nous devons les séparer. Cette opération, ainsi que les ajouts aux structures sont effectués dans les lignes 20-29.
+\begin{enumerate}
+    \item Tant qu'il existe des pions à capturer, nous les isolons un par un en faisant un `ou exclusif` avec le \ac{LSB} (lignes 21-22)
+    \item Le pion obtenu est ajouté à la liste des coups, et une liste vide est ajoutée à la table de transposition pour ce pion si aucun couple n'a été ajouté (lignes 23-25).
+    \item Pour chaque direction, le couple `nombre de sauts` et `direction` est ajouté à la liste de la table de transposition du pion capturé. (lignes 27).
+\end{enumerate}
 
 \subsection{Jouer un coup}
 \label{subsec:play}
 
+\begin{algorithm}
+    \caption{Réalisation d'un Coup en Othello}
+    \begin{algorithmic}[1]
+    \Function{RéaliserCoup}{$joueur$, $ennemi$, $coupAJouer$, $directions$}
+        \ForAll{$(direction, compte)$ in $directions[coupAJouer]$}
+            \State $victimes \gets coupAJouer$
+            \State $opposeeDirection \gets directionsOpposees[direction]$
+            \For{$i \gets 1$ \textbf{to} $compte$}
+                \State $victimes \gets victimes \,\, | \,\,(opposeeDirection(victimes) \,\, \& \,\, ennemi)$
+            \EndFor
+            \State $joueur \gets joueur \oplus victimes$
+            \State $ennemi \gets ennemi \oplus (victimes \,\, \& \,\, \sim coupAJouer)$
+        \EndFor
+        \State $joueur \gets joueur \,\, | \,\, coupAJouer$
+        \State \Return $joueur$, $ennemi$
+    \EndFunction
+
+    \State
+    \State $directionsOpposees \gets \{nord: sud, sud: nord, est: ouest, ouest: est,$
+    \Statex \hspace{\algorithmicindent} $nord\_ouest: sud\_est, nord\_est: sud\_ouest,$
+    \Statex \hspace{\algorithmicindent} $sud\_ouest: nord\_est, sud\_est: nord\_ouest\}$
+    \end{algorithmic}
+    \label{alg:play_move}
+\end{algorithm}
+Nous initialisons d'abord les victimes avec le coup à jouer. Puis, nous déterminons la direction opposée à celle dans laquelle le coup a été effectué. Cette étape est cruciale car, au lieu de commencer par nos pierres et de se diriger vers une direction candidate, nous partons du coup joué et nous nous orientons dans la direction opposée afin de capturer les pièces adverses.
+
+Nous poursuivons ensuite par la récupération des pièces adverses pouvant être capturées dans cette direction, jusqu'à atteindre le nombre requis de pièces à capturer.
+
+La mise à jour du plateau se fait ensuite via l'opérateur XOR :
+\begin{enumerate}
+    \item Nous ajoutons le coup joué à nos propres pièces.
+    \item Nous retirons les pièces adverses capturables de l'ensemble des pièces de l'ennemi.
+\end{enumerate}
+
+Étant donné que plusieurs directions sont envisageables pour un coup spécifique, l'opérateur XOR peut retourner une pièce plusieurs fois. Nous contournons cette problématique en employant l'opérateur OR vers la fin, pour garantir la présence du coup joué parmi nos pièces.
+
+Pour une raison analogue, nous excluons le coup joué des pierres capturées lors de l'application de l'opérateur XOR entre l'ennemi et les pièces capturables.
+
+Voir appendix \ref{app:valid_moves} pour les équivalents en Python.
+
+\subsection{Minimax et Alpha-Beta}
+\label{subsec:minimax}
+Dans cette section, nous parcourons les différents algorithmes de recherche utilisés pour la prise de décision. Puisque les codes se ressemblent beaucoup, nous ne développerons que l'algorithme Negamax avec l'élagage Alpha-Beta, et nous expliquerons les différences avec les autres algorithmes. Toutes les versions de Minimax sont disponibles dans l'appendice \ref{app:minimax}.

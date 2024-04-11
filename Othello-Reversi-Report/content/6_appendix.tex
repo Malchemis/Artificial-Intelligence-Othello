@@ -48,8 +48,32 @@ En \ref{subsec:shift}, nous avons vu comment décaler un bitboard dans 4 directi
 \noindent \textbf{En Python :}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{ressources/operateurCardinaux.png}
+    \includegraphics[width=0.8\textwidth]{ressources/operateurCardinaux.png}
     \includegraphics[width=0.5\textwidth]{ressources/operateurCardinauxComposes.png}
     \caption{Opérations de décalage pour les coups valides.}
     \label{fig:shift_ops}
 \end{figure}
+
+\section{Trouver et jouer coups valides}
+\label{app:valid_moves}
+
+En \ref{subsec:valid_moves}, nous avons vu comment trouver les coups valides et les jouer. Voyons maintenant en Python comment se traduit les pseudo-codes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{ressources/generate_moves.png}
+    \caption{Trouver les coups valides.}
+    \label{fig:generate_moves}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{ressources/make_move.png}
+    \caption{Jouer un coup.}
+    \label{fig:make_move}
+\end{figure}
+
+\section{Minimax}
+\label{app:minimax}
+
+En \ref{subsec:minimax}, nous avons vu comment implémenter l'algorithme Negamax avec AlphaBeta. Voyons maintenant en Python comment se traduit le pseudo-code, et les autres versions de l'algorithme.

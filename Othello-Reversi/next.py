@@ -39,12 +39,14 @@ def make_move(own: int, enemy: int, move_to_play: int, directions: dict) -> tupl
     for direction, count in directions[move_to_play]:
         victims = move_to_play  # Init the victims with the move to play
 
-        op_dir = opposite_dir(direction)  # opposite direction since we go from the move to play to the captured pieces
+        op_dir = opposite_dir(direction)  # opposite direction since we 
+        #go from the move to play to the captured pieces
         for _ in range(count):
             victims |= (op_dir(victims) & enemy)
         own ^= victims
         enemy ^= victims & ~move_to_play
-    # because of the XOR, the move to play which is considered a victim can be returned a pair number of times
+    # because of the XOR, the move to play which is considered a victim 
+    # can be returned a pair number of times
     own |= move_to_play
     return own, enemy
 
@@ -84,9 +86,7 @@ def south_east(x):
     return south(east(x))
 
 
-opposite_direction = {north: south, south: north, east: west, west: east, north_west: south_east,
-                      north_east: south_west,
-                      south_west: north_east, south_east: north_west}
+opposite_direction = {north: south, south: north, east: west, west: east, north_west: south_east, north_east: south_west, south_west: north_east, south_east: north_west}
 
 
 def opposite_dir(direction):
