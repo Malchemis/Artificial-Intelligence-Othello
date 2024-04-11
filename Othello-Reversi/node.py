@@ -1,3 +1,5 @@
+from typing import List
+
 from next import generate_moves, make_move
 from utils.visualize import cv2_display
 
@@ -12,37 +14,28 @@ class Node:
         self.children = []
         self.moves = []
         self.directions = {}
+        self.moves_to_child = {}
         self.value = None
         self.visited = False
 
     def expand(self):
         self.moves, self.directions = generate_moves(self.own_pieces, self.enemy_pieces, self.size)
         self.visited = True
+        for move in self.moves:
+            self.moves_to_child[move] = None
 
     def set_child(self, move):
         own, enemy = make_move(self.own_pieces, self.enemy_pieces, move, self.directions)
         child = Node(self, enemy, own, -self.turn, self.size)
+        self.moves_to_child[move] = child
         self.children.append(child)
         return child
-
-    def set_children(self):
-        for move in self.moves:
-            own, enemy = make_move(self.own_pieces, self.enemy_pieces, move, self.directions)
-            self.children.append(Node(self, enemy, own, -self.turn, self.size))
-
-    def get_child(self, child):
-        return self.children[self.children.index(child)]
 
     def add_other_child(self, other):
         for child in self.children:
             if child == other:
                 return child
         child = Node(self, other.own_pieces, other.enemy_pieces, other.turn, other.size)
-        self.children.append(child)
-        return child
-
-    def add_other_child_from_pieces(self, own, enemy):
-        child = Node(self, own, enemy, -self.turn, self.size)
         self.children.append(child)
         return child
 
@@ -66,7 +59,7 @@ class Node:
         return hash((self.own_pieces, self.enemy_pieces, self.turn))
 
 
-def replay(node: Node, size: int, verbose=False) -> list:
+def replay(node: Node, size: int, verbose=False) -> List[Node]:
     """Replay the game based on the moves of the Node by backtracking the tree and using a LIFO queue"""
     game = []
     count_child = 0

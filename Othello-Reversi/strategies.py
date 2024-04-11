@@ -6,7 +6,8 @@ from utils.minmax_params import TABLE1, TABLE2, MAX_INT, Strategy, Heuristic
 from utils.visualize import cv2_display
 
 
-def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: tuple, h_table: tuple, thresholds: tuple, verbose: int, stats_path: str, nb_pieces_played: int) -> Node:
+def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: tuple, h_table: tuple, thresholds: tuple,
+             nb_pieces_played: int) -> Node:
     """Return the next move based on the strategy.
 
     Args:
@@ -16,8 +17,6 @@ def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: tuple, h_t
         max_depth (tuple): max depth of the search. (tuple to allow different depths for each player)
         h_table (tuple): heuristic table to use.
         thresholds (tuple): threshold for the mixed strategy.
-        verbose (int): verbose level.
-        stats_path (str): path to save the stats.
         nb_pieces_played (int): number of pieces played.
         
     Returns:
@@ -47,7 +46,8 @@ def strategy(node: Node, mode: tuple, minimax_mode: tuple, max_depth: tuple, h_t
 
     # Define the max depth to use
     max_depth_to_use = max_depth[0] if node.turn == -1 else max_depth[1]
-    return func_to_use(node, heuristic_to_use, max_depth=max_depth_to_use, table=table_to_use)
+    next_node = func_to_use(node, heuristic_to_use, max_depth=max_depth_to_use, table=table_to_use)
+    return next_node
 
 
 def which_mode(mode: tuple, minimax_mode: tuple, h_table, turn: int) -> tuple:
@@ -209,39 +209,6 @@ def negamax(node: Node, heuristic: callable, max_depth: int, depth: int = 0, alp
     return random.choice(best_nodes)
 
 
-# def negamax_alpha_beta(node: Node, heuristic: callable, max_depth: int, depth: int = 0,
-#                        alpha: int = -MAX_INT, beta: int = MAX_INT, table=None) -> Node:
-#     """Negamax version of the MinMax Algorithm with alpha-beta pruning. Only works for pair depth."""
-#     # End of the recursion : Max depth reached or no more possible moves
-#     if depth == max_depth:
-#         node.value = heuristic(node.own_pieces, node.enemy_pieces, node.size, table)
-#         return node
-#
-#     if not node.visited:
-#         node.expand()
-#     if not node.moves:
-#         node.value = heuristic(node.own_pieces, node.enemy_pieces, node.size, table)
-#         return node
-#
-#     best = -MAX_INT
-#     best_nodes = []
-#     for move in node.moves:
-#         child = node.set_child(move)
-#         child.value = -negamax_alpha_beta(child, heuristic, max_depth,
-#                                           depth=depth + 1, alpha=-beta, beta=-alpha, table=table).value
-#
-#         if child.value > best:
-#             best = child.value
-#             best_nodes = [child]
-#             if best > alpha:
-#                 alpha = best
-#                 if alpha > beta:
-#                     return random.choice(best_nodes)
-#         elif child.value == best:
-#             best_nodes.append(child)
-#     return random.choice(best_nodes)
-
-
 def negamax_alpha_beta(node: Node, heuristic: callable, max_depth: int, depth: int = 0,
                        alpha: int = -MAX_INT, beta: int = MAX_INT, table=None) -> Node:
     """Negamax version of the MinMax Algorithm with alpha-beta pruning. Only works for pair depth."""
@@ -257,20 +224,21 @@ def negamax_alpha_beta(node: Node, heuristic: callable, max_depth: int, depth: i
         return node
 
     best = -MAX_INT
-    best_nodes = []
-    if not node.children:
-        node.set_children()
-    for child in node.children:
+    indexes = []
+    for i, move in enumerate(node.moves):
+        if node.moves_to_child[move] is None:
+            node.set_child(move)
+        child = node.moves_to_child[move]
         child.value = -negamax_alpha_beta(child, heuristic, max_depth,
                                           depth=depth + 1, alpha=-beta, beta=-alpha, table=table).value
 
         if child.value > best:
             best = child.value
-            best_nodes = [child]
+            indexes = [i]
             if best > alpha:
                 alpha = best
                 if alpha > beta:
-                    return random.choice(best_nodes)
+                    return node.children[random.choice(indexes)]
         elif child.value == best:
-            best_nodes.append(child)
-    return random.choice(best_nodes)
+            indexes.append(i)
+    return node.children[random.choice(indexes)]

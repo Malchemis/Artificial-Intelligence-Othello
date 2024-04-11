@@ -1,4 +1,7 @@
-from node import Node
+import os
+import pandas as pd
+
+from node import Node, replay
 from strategies import strategy
 from utils.bitwise_func import set_state, cell_count, print_board, print_pieces
 from utils.minmax_params import Strategy  # Enums for the strategies
@@ -30,49 +33,55 @@ def othello(mode: tuple, minimax_mode: tuple, max_depth: tuple, h_table: tuple, 
     error_handling(minimax_mode, mode, h_table, size)
 
     enemy, own = init_bit_board(size)  # set the bitboards : white pieces, black pieces
-    own_root = Node(None, own, enemy, -1, size)  # -1 for black, 1 for white
-    enemy_root = Node(None, own, enemy, -1, size)
+    current_player = Node(None, own, enemy, -1, size)  # -1 for black, 1 for white
+    other_player = Node(None, own, enemy, -1, size)
 
     nb_pieces_played = 4  # You can put this to 0 if you don't consider the starting pieces
+    nb_nodes_generated = ([], [])
     while True:
         if verbose == 2:
-            status(own, enemy, size, own_root.turn, nb_pieces_played)
+            status(own, enemy, size, current_player.turn, nb_pieces_played)
 
         # Generate the possible moves for the current player
-        if not own_root.visited:
-            own_root.expand()
+        if not current_player.visited:
+            current_player.expand()
         # Current player can't play
-        if not own_root.moves:  # Verify if the other player can play
-            own_root.invert()  # Swap players and turn
-            enemy_root = enemy_root.add_other_child(own_root)
-            enemy_root.expand()
-            if not enemy_root.moves:
+        if not current_player.moves:  # Verify if the other player can play
+            current_player.invert()  # Swap players and turn
+            other_player = other_player.add_other_child(current_player)
+            other_player.expand()
+            if not other_player.moves:
                 break  # End the game loop : No one can play
-            enemy_root, own_root = own_root, enemy_root
+            other_player, current_player = current_player, other_player
             continue  # Skip the current turn
 
         if display:  # Display the board using OpenCV
-            cv2_display(size, own_root.own_pieces, own_root.enemy_pieces, own_root.moves, own_root.turn,
+            cv2_display(size, current_player.own_pieces, current_player.enemy_pieces, current_player.moves,
+                        current_player.turn,
                         display_only=True)
 
         # Get the next game/node from the strategy
-        own_root = strategy(own_root, mode, minimax_mode, max_depth, h_table, thresholds, verbose, stats_path,
-                            nb_pieces_played)
-
-        # We remove unused nodes to save memory (Garbage Collector)
-        if own_root.parent is not None:
-            own_root.parent.children = [own_root]
+        current_player = strategy(current_player, mode, minimax_mode, max_depth, h_table, thresholds, nb_pieces_played)
+        if stats_path:
+            if current_player.turn == -1:
+                nb_nodes_generated[0].append(current_player.count_all_children())
+            else:
+                nb_nodes_generated[1].append(current_player.count_all_children())
 
         # Advance the tree for the other player
-        enemy_root = enemy_root.add_other_child(own_root)
-        enemy_root, own_root = own_root, enemy_root  # Swap
+        other_player = other_player.add_other_child(current_player)
+        collect(current_player, other_player)  # Remove parent's children to save memory
+        other_player, current_player = current_player, other_player  # Swap
         nb_pieces_played += 1  # and update metrics
 
-    return (get_winner(own_root.own_pieces, own_root.enemy_pieces, verbose, own_root.turn),
-            own_root.own_pieces,
-            own_root.enemy_pieces,
+    if stats_path:
+        save_stats(current_player, nb_pieces_played, nb_nodes_generated, stats_path, mode, minimax_mode, max_depth,
+                   h_table, thresholds)
+    return (get_winner(current_player.own_pieces, current_player.enemy_pieces, verbose, current_player.turn),
+            current_player.own_pieces,
+            current_player.enemy_pieces,
             nb_pieces_played,
-            own_root)
+            current_player)
 
 
 def error_handling(minimax_mode: tuple, mode: tuple, h_table: tuple, size: int) -> int:
@@ -94,7 +103,7 @@ def error_handling(minimax_mode: tuple, mode: tuple, h_table: tuple, size: int) 
         raise NotImplementedError("Invalid mode")
     if not all(Strategy.MINIMAX <= m <= Strategy.NEGAMAX_ALPHA_BETA for m in minimax_mode):
         raise NotImplementedError("Invalid minimax mode")
-    if not all(0 <= h < 2 for h in h_table):
+    if not all(0 <= h <= 2 for h in h_table):
         raise NotImplementedError("Invalid heuristic table")
 
     if size != 8:
@@ -149,3 +158,77 @@ def status(own: int, enemy: int, size: int, turn: int, nb_pieces_played: int) ->
     print(f"{white_pieces:064b}")
     print(f"{black_pieces:064b}")
     print(white_pieces | black_pieces)
+
+
+def collect(current_player: Node, other_player: Node) -> None:
+    """Remove the children of the parent node to save memory"""
+    if current_player.parent:
+        del current_player.parent.children
+        del current_player.parent.moves_to_child
+        current_player.parent.visited = False
+        current_player.parent.children = [current_player]
+    if other_player.parent:
+        del other_player.parent.children
+        del other_player.parent.moves_to_child
+        other_player.parent.visited = False
+        other_player.parent.children = [other_player]
+
+
+def save_stats(node: Node, nb_pieces_played: int, nb_nodes_generated: tuple, stats_path: str,
+               mode: tuple, minimax_mode: tuple, max_depth: tuple, h_table: tuple, thresholds: tuple) \
+        -> None:
+    """Save the stats of the game.
+    Append to the CSV file the following stats :
+    - Who played as Black and White
+    - The score of Black and White
+    - The number of pieces played
+    - A list of evaluated states for each player
+    - The number of nodes generated for each player
+
+    Args:
+        node (Node): the last node of the game
+        nb_pieces_played (int): the number of pieces played
+        nb_nodes_generated (tuple): the number of nodes generated for each player (a tuple of lists)
+        mode (tuple): describe the strategy and the player type.
+        minimax_mode (tuple): describe the minimax version.
+        max_depth (tuple): max depth of the search.
+        h_table (tuple): heuristic table to use.
+        thresholds (tuple): threshold for the mixed strategy.
+        stats_path (str): the path to save the stats
+    """
+    # check who played as Black and White
+    black_pieces, white_pieces = (node.own_pieces, node.enemy_pieces) if node.turn == -1 else (node.enemy_pieces,
+                                                                                               node.own_pieces)
+    black_score = cell_count(black_pieces)
+    white_score = cell_count(white_pieces)
+
+    # Backtrack the nodes to get the list of states
+    game_states = replay(node, node.size, False)
+    black_evaluated_states = []
+    white_evaluated_states = []
+    for state in game_states:
+        if state.turn == -1:
+            black_evaluated_states.append(state.value)
+        else:
+            white_evaluated_states.append(state.value)
+
+    # Get the identity of the players from the parameters
+    current = [mode[0], minimax_mode[0], max_depth[0], h_table[0], thresholds[0]]
+    other = [mode[1], minimax_mode[1], max_depth[1], h_table[1], thresholds[1]]
+    black_identity, white_identity = (current, other) if node.turn == -1 else (other, current)
+
+    # Append the stats to the CSV file
+    if not os.path.exists(stats_path):
+        stats = pd.DataFrame(columns=["Black", "White", "Black score", "White score", "Pieces played",
+                                      "Black evaluated states", "White evaluated states",
+                                      "Number of nodes generated by Black", "Number of nodes generated by White"])
+        stats.to_csv(stats_path, index=False)
+    stats = pd.read_csv(stats_path)
+    df = pd.DataFrame({"Black": [black_identity], "White": [white_identity], "Black score": [black_score],
+                       "White score": [white_score], "Pieces played": [nb_pieces_played],
+                       "Black evaluated states": [black_evaluated_states],
+                       "White evaluated states": [white_evaluated_states],
+                       "Number of nodes generated by Black": [nb_nodes_generated[0]],
+                       "Number of nodes generated by White": [nb_nodes_generated[1]]})
+    stats = pd.concat([stats, df], ignore_index=True, sort=False)
+    stats.to_csv(stats_path, index=False)

@@ -1,6 +1,6 @@
 ### Hyper Parameters ###
 # Whether to only measure the time of the algorithm
-time_only: False
+time_only: False # Note: doesn't show progress bar
 
 # Whether to profile the code. (Takes longer time ~2x)
 profile: False
@@ -13,10 +13,10 @@ replay: 0 # 0: no replay, 1: replay the last game, 2: replay the last game with 
 save: False
 
 # Path to statistics file
-stats_path: "../stats.csv" # default to Othello-Reversi/stats.csv
-
+stats_path: "../stats/custom" # default to Othello-Reversi/stats/custom.csv
+#stats_path: False
 # Number of games
-n: 20
+n: 2000
 
 ### Game Parameters ###
 # Who plays against who.
@@ -26,7 +26,7 @@ n: 20
 # 3: absolute (minimizes/maximizes the number of pieces for the opponent/player),
 # 4: mobility (minimizes/maximizes the number of possible moves for the opponent/player),
 # 5: mixed (uses a heuristic table to define the quality of a position). Mixed signifies using positional, then mobility, then absolute.
-mode: [5, 2]
+mode: [1, 1]
 
 # Which MiniMax version to use.
 # 0: Default MiniMax
@@ -39,13 +39,12 @@ minimax_mode: [3, 3]
 max_depth: [6, 6]
 
 # Which heuristic table to use.
-# 0: Default if mode is 2 or 6, else None
 # 1: TABLE1
 # 2: TABLE2
-h_table: [1, 1]
+h_table: [0, 0]
 
 # Threshold for when to switch strategies if mode is 6. 
-threshold: [15, 45] # Default = [15, 45]
+threshold: [30, 55] # Default = [15, 45]
 
 # Size of the board
 size: 8 # The program is not yet fully tested with other sizes than 8

@@ -48,10 +48,11 @@ class Strategy:
     def __init__(self):
         pass
 
+
 class Heuristic:
     # Heuristic evaluation functions
-    TABLE1 = 0
-    TABLE2 = 1
-    
+    TABLE1 = 1
+    TABLE2 = 2
+
     def __init__(self):
         pass
