@@ -60,7 +60,7 @@ Par exemple, la configuration initiale du plateau de jeu est la suivante :
     \label{fig:init_board}
 \end{figure}
 
-Elle s'encode comme suit, avec dans l'ordre, le plateau noir, puis blanc : 
+Cette dernière s'encode comme suit, avec dans l'ordre, le plateau noir, puis blanc : 
 \begin{align*}
 0b00000000\_00000000\_00000000\_00001000\_00010000\_00000000\_00000000\_00000000 \\
 0b00000000\_00000000\_00000000\_00010000\_00001000\_00000000\_00000000\_00000000 \\
@@ -75,32 +75,30 @@ Il est possible de récupérer la valeur d'une case $c_{i,j}$ d'un bitboard $b$ 
 \begin{align*}
     (b\quad \gg\quad (8\times i+j))\quad \&\quad 1
 \end{align*}
-Avec $i$ la ligne, $j$ la colonne, $\gg$ l'opérateur de décalage à droite, et $\&$ l'opérateur logique 'et'.
+Avec $i$ la ligne, $j$ la colonne, $\gg$ l'opérateur de décalage à droite, et $\&$ l'opérateur logique '\texttt{et}'.
 
 Similairement, nous pouvons définir une case $c_{i,j}$ d'un bitboard $b$ en utilisant la formule suivante :
 \begin{align*}
     b\quad |\quad (1\quad \ll\quad (8\times i+j))
 \end{align*}
-Avec $\ll$ l'opérateur de décalage à gauche, et $|$ l'opérateur logique 'ou'.
+Avec $\ll$ l'opérateur de décalage à gauche, et $|$ l'opérateur logique '\texttt{ou}'.
 
 Nous obtenons toutes les pièces posées et toutes les cases vides avec les opérations logiques suivantes :
 \begin{align*}
-    &\text{pieces} = \text{noir} \quad | \quad \text{blanc} \\
-    &\text{vides} = \sim \text{pieces}
+    \text{pieces} &= \text{noir} \quad | \quad \text{blanc} \\
+    \text{vides} &= \quad\sim\text{pieces}
 \end{align*}
-Avec $\sim$ l'opérateur logique 'non'. Les équivalents en python sont donnés dans l'appendice \ref{app:logical_ops}.
-
-De manière générale, n'importe quel pion ou coup peut être ajouté au plateau avec l'opérateur logique 'ou'.
+Avec $\sim$ l'opérateur logique 'non'. Les programmes équivalents en python sont donnés dans l'appendice \ref{app:logical_ops}. De manière générale, n'importe quel pion peut être ajouté au plateau avec l'opérateur logique '\texttt{ou}'. Aussi, \texttt{8} peut être remplacé par n'importe quel entier représentant la taille du plateau, ici \texttt{8x8}.
 
 
 \section{Algorithmes}
 \label{sec:algo}
 
-\subsubsection{Comment décaler un bitboard ?}
+\subsection{Décaler un bitboard}
 \label{subsec:shift}
 Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs l'étape la plus couteuse en temps de calcul. La représentation en bitboards nous permet de calculer les coups valides de manière très efficace, en vectorisant les opérations. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis. 
 
-Pour cela, il va nous falloir être capable de décaler un plateau entier dans les 8 directions cardinales. Nous le faisons en utilisant des opérations logiques, comme le montre le pseudo-code ci-après.
+Pour cela, nous devons être capable de décaler un plateau entier dans les 8 directions cardinales. Nous y parvenons en utilisant les opérations logiques suivantes :
 \begin{algorithm}
     \caption{Opérations de décalage pour les coups valides.}
     \begin{algorithmic}[1]
@@ -123,10 +121,47 @@ Pour cela, il va nous falloir être capable de décaler un plateau entier dans l
     \label{alg:shift_ops}
 \end{algorithm}
 
-Les masques permettent d'éviter un débordement ou \textit{overflow}, une sortie de plateau, et de préserver les bords. Ils consistent à mettre à 0 les bits qui sont des positions sensibles dans la direction donnée. Nous obtenons ensuite $Nord-Est$, $Nord-Ouest$, $Sud-Est$, $Sud-Ouest$ en combinant les opérations précédentes. (Voir appendix \ref{app:logical_ops} pour plus de détails, ainsi que les codes python correspondant).
+Les masques permettent d'éviter un débordement ou \textit{overflow}, une sortie de plateau, et de préserver les bords. Ils consistent à mettre à 0 les bits qui sont des positions sensibles dans la direction donnée. Nous obtenons ensuite $Nord-Est$, $Nord-Ouest$, $Sud-Est$, $Sud-Ouest$ en combinant les opérations précédentes. (Voir appendix \ref{app:logical_ops} pour plus de détails).
 
 \subsection{Trouver les coups valides}
 \label{subsec:valid_moves}
+
+\begin{algorithm}[H]
+    \caption{Génération des Coups Valides avec Bitboards}
+    \begin{algorithmic}[1]
+    \Function{GénérerCoups}{$joueur$, $ennemi$, $taille$}
+        \State $casesVides \gets \sim(joueur \lor ennemi)$
+        \State $coupsUniques \gets []$
+        \State $sautsDir \gets \{\}$
+        \ForAll{$direction$ in [$nord$, $sud$, $est$, $ouest$, $nord\_ouest$, $\dots$, $sud\_est$]}
+            \State $compteur \gets 0$
+            \State $victimes \gets direction(joueur) \land ennemi$
+            \If{$victimes = \text{faux}$}
+                \State \textbf{continue}
+            \EndIf
+            \For{$i \gets 1$ \textbf{to} $taille$}
+                \State $compteur \gets compteur + 1$
+                \State $prochainePiece \gets direction(victimes) \land ennemi$
+                \If{$prochainePiece = \text{faux}$}
+                    \State \textbf{break}
+                \EndIf
+                \State $victimes \gets victimes \lor prochainePiece$
+            \EndFor
+            \State $captures \gets direction(victimes) \land casesVides$
+            \While{$captures \neq 0$}
+                \State $capture \gets captures \land -captures$
+                \State $captures \gets captures \oplus capture$
+                \If{$capture \notin sautsDir$}
+                    \State Ajouter $capture$ à $coupsUniques$
+                    \State $sautsDir[capture] \gets []$
+                \EndIf
+                \State Ajouter $(direction, compteur)$ à $sautsDir[capture]$
+            \EndWhile
+        \EndFor
+        \State \Return $coupsUniques$, $sautsDir$
+    \EndFunction
+    \end{algorithmic}
+\end{algorithm}
 
 \subsection{Jouer un coup}
 \label{subsec:play}
