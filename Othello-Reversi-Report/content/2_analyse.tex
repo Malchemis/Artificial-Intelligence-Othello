@@ -13,20 +13,28 @@ Notre implémentation comprend notamment une représentation binaire, aussi appe
 \dirtree{%
 .1 \textbf{Othello-Reversi/}.
 .2 config.yaml : fichier de configuration des paramètres globaux du projet.
-.2 \textbf{recipe/}.
-.3 \texttt{main} : point d'entrée du programme, permet de réaliser des tests, lancer des parties, faire jouer des algorithmes, etc.
-.3 \texttt{game.py} : contient la logique de la boucle de jeu, permet de lancer une partie selon les paramètres donnés.
-.3 \texttt{node.py} : contient la classe $\texttt{Node}$, encapsulant un état du jeu, et les informations nécessaires pour l'exploration de l'arbre de recherche, ou pour rejouer une partie.
-.3 \texttt{strategies.py} : contient les algorithmes de recherche, et retourne le plateau après jouer un coup selon la stratégie choisie.
-.3 \texttt{next.py} : contient les fonctions de calcul des coups valides, et celles pour jouer un coup.
-.3 \texttt{heuristics.py} : contient les fonctions d'évaluation et heuristiques.
+.2 \texttt{main} : point d'entrée du programme, permet de réaliser des tests, lancer des parties, faire jouer des algorithmes, etc.
+.2 \texttt{game.py} : contient la logique de la boucle de jeu, permet de lancer une partie selon les paramètres donnés.
+.2 \texttt{node.py} : contient la classe $\texttt{Node}$, encapsulant un état du jeu, et les informations nécessaires pour l'exploration de l'arbre de recherche, ou pour rejouer une partie.
+.2 \texttt{strategies.py} : contient les algorithmes de recherche, et retourne le plateau après jouer un coup selon la stratégie choisie.
+.2 \texttt{next.py} : contient les fonctions de calcul des coups valides, et celles pour jouer un coup.
+.2 \texttt{heuristics.py} : contient les fonctions d'évaluation basées sur des heuristiques.
 .2 \textbf{utils/}.
-.3 \textit{Ensemble de fonctions utilitaires} telles que les fonctions d'évaluation, de visualisation, d'opérations logiques, etc.
+.3 \textit{Ensemble de fonctions utilitaires} telles que des tables d'heuristiques, la visualisation, les opérations logiques, etc.
 .2 \texttt{model\_pipeline.ipynb} : notebook Jupyter pour data preprocessing, model training, et evaluation.
 .2 \texttt{understanding\_bitboards.ipynb} : notebook Jupyter pour comprendre les bitboards, de nombreux exemples illustrent les opérations logiques.
 }\leavevmode\\
 
-Une partie peut être lancée depuis le programme \texttt{main.py}, ce dernier prendra les paramètres définies dans le fichier yaml. Par exemple, pour lancer une partie avec visualisation entre un joueur Aléatoire et un joueur Negamax-AlphaBeta, 
+Une partie peut être lancée depuis le programme \texttt{main.py}, ce dernier prendra les paramètres définies dans le fichier \texttt{config.yaml}. Par exemple, pour lancer une partie avec \textit{Interface} entre un joueur \textit{Humain} et un joueur \textit{Negamax-AlphaBeta}, en utilisant une stratégie \textit{Positionnelle} pour l'évaluation avec une profondeur d'exploration maximale de 4 coups, nous obtenons le fichier de configuration suivant: 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{ressources/configYaml.png}
+    \includegraphics[width=\textwidth]{ressources/configYaml-display.png}
+    \caption{Exemple d'une configuration (non complète).}
+    \label{fig:configYaml}
+\end{figure}
+
+Plus de paramètres sont disponibles, accompagnés de leurs valeurs par défaut, ainsi que des descriptions et commentaires.
 
 
 \subsection{Bitboards}
@@ -37,32 +45,24 @@ En effet, au lieu de contenir 64 entiers de $32 bits$ chacun (soit $2048 bits$),
 
 \subsubsection{Comment encoder un pion, un coup, ou un plateau de jeu ?}
 \label{subsubsec:enc}
-Nous pouvons en fait tous les encoder de la même manière, en utilisant un bitboard. Chaque bit représente une case du plateau, et est à 1 si la case est occupée par un pion, ou si le coup est valide. Le \ac{MSB} correspond à la case $h8$, et le \ac{LSB} à la case $a1$.
-
-Les positions sont usuellement notés de $a1$ à $h8$, où $a$ est la colonne la plus à gauche, et $1$ la ligne la plus basse. \cite{brian_rose_2005} 
+Nous pouvons en fait tous les encoder de la même manière, en utilisant un bitboard. Chaque bit représente une case du plateau, et est à 1 si la case est occupée par un pion, ou si le coup est valide. Le \ac{MSB} correspond à la case $h8$, et le \ac{LSB} à la case $a1$. Les positions sont usuellement notés de $a1$ à $h8$, où $a$ est la colonne la plus à gauche, et $1$ la ligne la plus haute. \cite{brian_rose_2005} 
 
 Par exemple, la configuration initiale du plateau de jeu est la suivante :
 \begin{itemize}
-    \item Les pions noirs sont en $d4$ et $e5$.
-    \item Les pions blancs sont en $d5$ et $e4$.
-    \item Les coups valides sont en $c3$, $f6$ (noirs), $c6$, $f3$ (blancs).
+    \item Les pions noirs sont en $d5$ et $e4$.
+    \item Les pions blancs sont en $d4$ et $e5$.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{ressources/plateau_init.png}
+    \includegraphics[width=0.5\textwidth]{ressources/plateau_init.png}
     \caption{Configuration initiale du plateau de jeu. Source : \href{https://www.eothello.com/}{eOthello}.}
     \label{fig:init_board}
 \end{figure}
 
-Elle s'encode comme suit. '0b', '0x' indiquent respectivement un nombre binaire et hexadécimal ; les underscores sont là pour faciliter la lecture :
-\newline \newline
-\noindent Le plateau noir : 
+Elle s'encode comme suit, avec dans l'ordre, le plateau noir, puis blanc : 
 \begin{align*}
 0b00000000\_00000000\_00000000\_00001000\_00010000\_00000000\_00000000\_00000000 \\
-\end{align*}
-Le plateau blanc :
-\begin{align*}
 0b00000000\_00000000\_00000000\_00010000\_00001000\_00000000\_00000000\_00000000 \\
 \end{align*}
 Ces deux entiers peuvent être réécris en hexadécimal pour une meilleure lisibilité :
@@ -88,7 +88,7 @@ Nous obtenons toutes les pièces posées et toutes les cases vides avec les opé
     &\text{pieces} = \text{noir} \quad | \quad \text{blanc} \\
     &\text{vides} = \sim \text{pieces}
 \end{align*}
-Avec $\sim$ l'opérateur logique 'non'.
+Avec $\sim$ l'opérateur logique 'non'. Les équivalents en python sont donnés dans l'appendice \ref{app:logical_ops}.
 
 De manière générale, n'importe quel pion ou coup peut être ajouté au plateau avec l'opérateur logique 'ou'.
 

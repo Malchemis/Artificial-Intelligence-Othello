@@ -1,5 +1,6 @@
 .idea/
 Othello-Reversi/data/
+Othello-Reversi/utils/__pycache__/
 Othello-Reversi/__pycache__/
 Othello-Reversi/saved_games/
 Othello-Reversi-Report/main.aux

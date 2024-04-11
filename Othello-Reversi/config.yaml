@@ -25,8 +25,9 @@ n: 2000
 # 2: positional. (uses a heuristic table to define the quality of a position),
 # 3: absolute (minimizes/maximizes the number of pieces for the opponent/player),
 # 4: mobility (minimizes/maximizes the number of possible moves for the opponent/player),
-# 5: mixed (uses a heuristic table to define the quality of a position). Mixed signifies using positional, then mobility, then absolute.
-mode: [1, 1]
+# 5: mixed (uses a heuristic table to define the quality of a position). 
+# Mixed signifies using positional, then mobility, then absolute.
+mode: [0, 2]
 
 # Which MiniMax version to use.
 # 0: Default MiniMax
@@ -36,14 +37,15 @@ mode: [1, 1]
 minimax_mode: [3, 3]
 
 # Maximum depth of the search tree (minimax algorithm)
-max_depth: [6, 6]
+max_depth: [4, 4]
 
 # Which heuristic table to use.
+# 0: None
 # 1: TABLE1
 # 2: TABLE2
-h_table: [0, 0]
+h_table: [0, 2]
 
-# Threshold for when to switch strategies if mode is 6. 
+# Threshold for when to switch strategies if mode is Mixed. 
 threshold: [30, 55] # Default = [15, 45]
 
 # Size of the board
