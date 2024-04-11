@@ -93,12 +93,10 @@ Avec $\sim$ l'opérateur logique 'non'. Les programmes équivalents en python so
 
 \section{Algorithmes}
 \label{sec:algo}
-
+Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs l'étape la plus couteuse en temps de calcul. La représentation en bitboards nous permet de calculer les coups valides de manière très efficace, en vectorisant les opérations. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis.
 \subsection{Décaler un bitboard}
 \label{subsec:shift}
-Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs l'étape la plus couteuse en temps de calcul. La représentation en bitboards nous permet de calculer les coups valides de manière très efficace, en vectorisant les opérations. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis. 
-
-Pour cela, nous devons être capable de décaler un plateau entier dans les 8 directions cardinales. Nous y parvenons en utilisant les opérations logiques suivantes :
+Pour réaliser cela, nous devons être capable de décaler un plateau entier dans les 8 directions cardinales. Nous y parvenons en utilisant les opérations logiques suivantes :
 \begin{algorithm}
     \caption{Opérations de décalage pour les coups valides.}
     \begin{algorithmic}[1]
