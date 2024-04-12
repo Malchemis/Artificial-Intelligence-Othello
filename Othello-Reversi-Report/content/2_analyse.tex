@@ -95,9 +95,82 @@ Avec $\sim$ l'opérateur logique 'non'. Les programmes équivalents en python so
 
 \subsection{Structure Node}
 \label{subsec:node}
+Dans le contexte de ce projet, nous aimerions pouvoir rejouer des parties, déterminer les états déjà traités, et reprendre les anaylyses formulés lors de tours précédants. Pour cela, nous avons défini une structure de données nommée \texttt{Node}, qui encapsule un état du jeu, et les informations nécessaires pour l'exploration de l'arbre de recherche. Nous l'avons défini dans le fichier \texttt{node.py} via une classe Python. \vskip 0.5cm
+
+\noindent\textbf{Attributs:}
+\begin{itemize}
+    \item \textbf{parent} : Référence au nœud parent dans l'arbre de jeu.
+    \item \textbf{pièces\_joueur} : Représente les pièces du joueur actuel.
+    \item \textbf{pièces\_ennemi} : Représente les pièces de l'ennemi.
+    \item \textbf{tour} : Indique à qui est le tour de jouer.
+    \item \textbf{taille} : La taille du plateau de jeu.
+    \item \textbf{enfants} : Liste des nœuds enfants générés par expansion.
+    \item \textbf{coups} : Liste des coups possibles à partir de ce nœud.
+    \item \textbf{directions} : Dictionnaire associant à chaque coup les directions des pièces à capturer.
+    \item \textbf{coups\_vers\_enfant} : Dictionnaire reliant les coups aux nœuds enfants correspondants.
+    \item \textbf{valeur} : Valeur évaluative du nœud pour les algorithmes de recherche.
+    \item \textbf{visité} : Booléen indiquant si le nœud a été visité lors de la recherche.
+\end{itemize}
+\leavevmode\\
+\textbf{Méthodes:}
+\begin{itemize}
+    \item \textbf{développer()} : Génère tous les coups possibles et prépare les structures pour l'expansion.
+    \item \textbf{définir\_enfant(coup)} : Crée un nœud enfant à partir d'un coup spécifié et l'ajoute à la liste des enfants.
+    \item \textbf{ajouter\_autre\_enfant(autre)} : Ajoute un autre nœud enfant qui n'est pas généré par un coup direct. Permet de transférer des noeuds d'un joueur à l'autre.
+    \item \textbf{inverser()} : Échange les pièces du joueur et de l'ennemi et inverse le tour de jeu.
+    \item \textbf{compter\_tous\_les\_enfants()} : Compte récursivement le nombre total de nœuds enfants.
+\end{itemize}
 
 
+\subsection{Boucle de jeu et séparation des connaissances}
+\label{subsec:game_loop}
+La boucle de jeu est le cœur de notre implémentation. Elle gère les interactions entre les différents composants du jeu, tels que les joueurs, les nœuds, les stratégies, et les paramètres de configuration. La boucle de jeu suit un processus itératif qui se déroule en plusieurs étapes, comme décrit ci-dessous :
 
+\begin{enumerate}
+    \item \textbf{Initialisation :}
+    \begin{itemize}
+        \item Le jeu commence avec un plateau de 8x8 cases par défaut, équipé initialement de deux pièces noires et deux pièces blanches au centre.
+        \item Les joueurs sont initialisés avec un système de bitboards qui gère les positions des pièces sur le plateau.
+        \item Deux instances de joueurs (nœuds) sont créées, représentant le joueur actuel et son adversaire.
+    \end{itemize}
+    
+    \item \textbf{Déroulement du jeu :}
+    \begin{itemize}
+        \item La boucle de jeu continue tant que des coups sont possibles.
+        \item Pour chaque tour, le jeu vérifie si le joueur actuel a des coups disponibles. Si c'est le cas, il les génère en utilisant la méthode d'expansion du nœud.
+        \item Si le joueur actuel ne peut pas jouer (aucun coup possible), le jeu vérifie si l'autre joueur peut jouer. Si aucun des deux joueurs ne peut jouer, le jeu se termine.
+    \end{itemize}
+\end{enumerate}
+$\rightarrow$ Séparation des connaissances : il y a dupplication des noeuds, un pour chaque joueur. Pendant la phase de statégie, seul le noeud du courant est utilisé.
+
+\begin{enumerate}[resume]
+    \item \textbf{Affichage :}
+    \begin{itemize}
+        \item Si l'affichage est activé, le plateau est mis à jour visuellement après chaque coup pour montrer la progression du jeu.
+    \end{itemize}
+    
+    \item \textbf{Stratégie de jeu :}
+    \begin{itemize}
+        \item Une stratégie détermine le coup suivant du joueur en cours en fonction des configurations définies.
+        \item La stratégie peut intégrer différentes approches et niveaux de complexité selon les règles de jeu ou les paramètres d'IA spécifiés.
+        \item Si le joueur actuel est un humain, le jeu attend un clic de souris sur un coup valide pour continuer.
+        \item L'algorithme de stratégie retourne le prochain noeud.
+    \end{itemize}
+
+    \item \textbf{Gestion de la mémoire et des statistiques :}
+    \begin{itemize}
+        \item Après chaque mouvement, les enfants du nœud précédent sont éventuellement nettoyés pour optimiser l'utilisation de la mémoire.
+        \item Des statistiques de jeu peuvent être collectées et enregistrées, notamment le nombre de pièces jouées et le nombre de nœuds générés.
+    \end{itemize}
+\end{enumerate}
+$\rightarrow$ Préservation des connaissances : à chaque fin d'itération, lorsque les joueurs doivent être inversés, la méthode \texttt{ajouter\_autre\_enfant(autre)} compare les noeuds enfants des deux joueurs, et soit crée une copie du noeud de l'autre joueur, soit récupère le noeud enfant si il existe déjà.
+\begin{enumerate}[resume]
+    \item \textbf{Fin du jeu :}
+    \begin{itemize}
+        \item Le jeu se termine lorsque plus aucun coup n'est possible pour les deux joueurs. À ce stade, on détermine le vainqueur en comptant le nombre de pièces pour chaque joueur.
+        \item Les résultats finaux, y compris les statistiques et l'état final du jeu, peuvent être enregistrés ou affichés selon les configurations.
+    \end{itemize}
+\end{enumerate}
 
 \section{Algorithmes}
 \label{sec:algo}
@@ -171,7 +244,9 @@ Pour générer les coups valides à partir d'un position donnée, nous avons bes
     \label{alg:gen_moves}
 \end{algorithm}
 
-L'objectif de cette fonction est de remplir une liste de coups possible, mais également de stocker les informations nécessaires pour réaliser ces coups. À cette fin, nous remplissons dans une table de transposition\footnote{un simple de dictionnaire en Python} pour chaque coup trouvé, une liste de couples `nombre de sauts` et `direction`. Nous pouvons décomposer l'algorithme \ref{alg:gen_moves} en plusieurs étapes :
+L'objectif de cette fonction est de remplir une liste de coups possible, mais également de stocker les informations nécessaires pour réaliser ces coups. À cette fin, nous remplissons dans une table de transposition\footnote{un simple de dictionnaire en Python} pour chaque coup trouvé, une liste de couples `nombre de sauts` et `direction`. 
+
+Nous pouvons décomposer l'algorithme \ref{alg:gen_moves} en plusieurs étapes :
 \begin{enumerate}
     \item Calculer les cases vides et initiliser les 2 structures à retourner (lignes 2-4).
     \item Pour chaque direction, trouver les pions de l'adversaire qui sont des candidats pour être capturés (lignes 7-10). Un ensemble de pions est candidat si son intersection avec les pions adverses n'est pas vide.
@@ -212,9 +287,9 @@ L'objectif de cette fonction est de remplir une liste de coups possible, mais é
     \end{algorithmic}
     \label{alg:play_move}
 \end{algorithm}
-Nous initialisons d'abord les victimes avec le coup à jouer. Puis, nous déterminons la direction opposée à celle dans laquelle le coup a été effectué. Cette étape est cruciale car, au lieu de commencer par nos pierres et de se diriger vers une direction candidate, nous partons du coup joué et nous nous orientons dans la direction opposée afin de capturer les pièces adverses.
+Nous initialisons d'abord les victimes avec le coup à jouer. Puis, nous déterminons la direction opposée à celle dans laquelle le coup a été effectué. Cette étape est cruciale car, au lieu de commencer par nos pierres et de se diriger vers une direction candidate, nous partons du coup joué et nous orientons dans la direction opposée afin de capturer les pièces adverses.
 
-Nous poursuivons ensuite par la récupération des pièces adverses pouvant être capturées dans cette direction, jusqu'à atteindre le nombre requis de pièces à capturer.
+Nous poursuivons ensuite par la récupération des pièces adverses pouvant être capturées dans cette direction, jusqu'à atteindre le nombre requis.
 
 La mise à jour du plateau se fait ensuite via l'opérateur XOR :
 \begin{enumerate}
@@ -231,3 +306,20 @@ Voir appendix \ref{app:valid_moves} pour les équivalents en Python.
 \subsection{Minimax et Alpha-Beta}
 \label{subsec:minimax}
 Dans cette section, nous parcourons les différents algorithmes de recherche utilisés pour la prise de décision. Puisque les codes se ressemblent beaucoup, nous ne développerons que l'algorithme Negamax avec l'élagage Alpha-Beta, et nous expliquerons les différences avec les autres algorithmes. Toutes les versions de Minimax sont disponibles dans l'appendice \ref{app:minimax}.
+
+
+\subsection{Évaluateur de la qualité d'une position avec PyTorch}
+\label{subsec:eval}
+
+\subsubsection{Extraire les données de la WTHOR database}
+\label{subsubsec:wthor}
+
+\subsubsection{Prétraitement des données}
+\label{subsubsec:preproc}
+
+\subsubsection{Création du modèle}
+\label{subsubsec:model}
+
+\subsubsection{Entraînement du modèle}
+\label{subsubsec:train}
+
