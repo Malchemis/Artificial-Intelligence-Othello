@@ -27,7 +27,7 @@ def championship(n_iterations=100, stats_path=None):
                     othello, n_iterations,
                     ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
                      [0, 0], defaults_threshold, 8, False, False,
-                     stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{0}_{0}_"
+                     stats_path + f"/championship_{strategy1}_{strategy2}_{depth}_{0}_{0}_"
                                   f"{default_minimax_algorithm[0]}.csv")
                 )
         # Heuristic against non-heuristic (2*2*2 = 8)
@@ -38,7 +38,7 @@ def championship(n_iterations=100, stats_path=None):
                         othello, n_iterations,
                         ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
                          [table, 0], defaults_threshold, 8, False, False,
-                         stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{table}_{0}_"
+                         stats_path + f"/championship_{strategy1}_{strategy2}_{depth}_{table}_{0}_"
                                       f"{default_minimax_algorithm[0]}.csv")
                     )
         # Non-heuristic against heuristic (2*2*2 = 8)
@@ -49,7 +49,7 @@ def championship(n_iterations=100, stats_path=None):
                         othello, n_iterations,
                         ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
                          [0, table], defaults_threshold, 8, False, False,
-                         stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{0}_{table}_"
+                         stats_path + f"/championship_{strategy1}_{strategy2}_{depth}_{0}_{table}_"
                                       f"{default_minimax_algorithm[0]}.csv")
                     )
         # Heuristic against heuristic (2*2*2*2 = 16)
@@ -61,7 +61,7 @@ def championship(n_iterations=100, stats_path=None):
                             othello, n_iterations,
                             ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
                              [table1, table2], defaults_threshold, 8, False, False,
-                             stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{table1}_{table2}_"
+                             stats_path + f"/championship_{strategy1}_{strategy2}_{depth}_{table1}_{table2}_"
                                           f"{default_minimax_algorithm[0]}.csv")
                         )
 
