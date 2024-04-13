@@ -100,9 +100,9 @@ Dans le contexte de ce projet, nous aimerions pouvoir rejouer des parties, déte
 \noindent\textbf{Attributs:}
 \begin{itemize}
     \item \textbf{parent} : Référence au nœud parent dans l'arbre de jeu.
-    \item \textbf{pièces\_joueur} : Représente les pièces du joueur actuel.
-    \item \textbf{pièces\_ennemi} : Représente les pièces de l'ennemi.
-    \item \textbf{tour} : Indique à qui est le tour de jouer.
+    \item \textbf{pièces\_joueur} : Représente les pièces du joueur actuel (bitboard).
+    \item \textbf{pièces\_ennemi} : Représente les pièces de l'ennemi. (bitboard)
+    \item \textbf{tour} : Indique à qui est le tour de jouer (-1 pour noir, 1 pour blanc).
     \item \textbf{taille} : La taille du plateau de jeu.
     \item \textbf{enfants} : Liste des nœuds enfants générés par expansion.
     \item \textbf{coups} : Liste des coups possibles à partir de ce nœud.
@@ -115,7 +115,7 @@ Dans le contexte de ce projet, nous aimerions pouvoir rejouer des parties, déte
 \textbf{Méthodes:}
 \begin{itemize}
     \item \textbf{développer()} : Génère tous les coups possibles et prépare les structures pour l'expansion.
-    \item \textbf{définir\_enfant(coup)} : Crée un nœud enfant à partir d'un coup spécifié et l'ajoute à la liste des enfants.
+    \item \textbf{définir\_enfant(coup)} : Crée un nœud enfant à partir d'un coup spécifié et l'ajoute à la liste des enfants. Si le noeud enfant existe déjà, il est simplement retourné.
     \item \textbf{ajouter\_autre\_enfant(autre)} : Ajoute un autre nœud enfant qui n'est pas généré par un coup direct. Permet de transférer des noeuds d'un joueur à l'autre.
     \item \textbf{inverser()} : Échange les pièces du joueur et de l'ennemi et inverse le tour de jeu.
     \item \textbf{compter\_tous\_les\_enfants()} : Compte récursivement le nombre total de nœuds enfants.
@@ -287,9 +287,7 @@ Nous pouvons décomposer l'algorithme \ref{alg:gen_moves} en plusieurs étapes :
     \end{algorithmic}
     \label{alg:play_move}
 \end{algorithm}
-Nous initialisons d'abord les victimes avec le coup à jouer. Puis, nous déterminons la direction opposée à celle dans laquelle le coup a été effectué. Cette étape est cruciale car, au lieu de commencer par nos pierres et de se diriger vers une direction candidate, nous partons du coup joué et nous orientons dans la direction opposée afin de capturer les pièces adverses.
-
-Nous poursuivons ensuite par la récupération des pièces adverses pouvant être capturées dans cette direction, jusqu'à atteindre le nombre requis.
+Nous initialisons d'abord les victimes avec le coup à jouer. Puis, nous déterminons la direction opposée à celle dans laquelle le coup a été effectué. Cette étape est cruciale car, au lieu de commencer par nos pierres et de se diriger vers une direction candidate, nous partons du coup joué et nous orientons dans la direction opposée afin de capturer les pièces adverses. Nous poursuivons ensuite par la récupération des pièces adverses pouvant être capturées dans cette direction, jusqu'à atteindre le nombre requis.
 
 La mise à jour du plateau se fait ensuite via l'opérateur XOR :
 \begin{enumerate}
@@ -297,15 +295,75 @@ La mise à jour du plateau se fait ensuite via l'opérateur XOR :
     \item Nous retirons les pièces adverses capturables de l'ensemble des pièces de l'ennemi.
 \end{enumerate}
 
-Étant donné que plusieurs directions sont envisageables pour un coup spécifique, l'opérateur XOR peut retourner une pièce plusieurs fois. Nous contournons cette problématique en employant l'opérateur OR vers la fin, pour garantir la présence du coup joué parmi nos pièces.
-
-Pour une raison analogue, nous excluons le coup joué des pierres capturées lors de l'application de l'opérateur XOR entre l'ennemi et les pièces capturables.
+Étant donné que plusieurs directions sont envisageables pour un coup spécifique, l'opérateur XOR peut retourner une pièce plusieurs fois. Nous contournons cette problématique en employant l'opérateur OR vers la fin, pour garantir la présence du coup joué parmi nos pièces. Pour une raison analogue, nous excluons le coup joué des pierres capturées lors de l'application de l'opérateur XOR entre l'ennemi et les pièces capturables.
 
 Voir appendix \ref{app:valid_moves} pour les équivalents en Python.
 
 \subsection{Minimax et Alpha-Beta}
 \label{subsec:minimax}
-Dans cette section, nous parcourons les différents algorithmes de recherche utilisés pour la prise de décision. Puisque les codes se ressemblent beaucoup, nous ne développerons que l'algorithme Negamax avec l'élagage Alpha-Beta, et nous expliquerons les différences avec les autres algorithmes. Toutes les versions de Minimax sont disponibles dans l'appendice \ref{app:minimax}.
+Dans cette section, nous parcourons les différents algorithmes de recherche utilisés pour la prise de décision. Puisque les codes se ressemblent beaucoup, nous ne développerons que l'algorithme Negamax avec l'élagage Alpha-Beta. Toutes les versions de Minimax sont disponibles dans l'appendice \ref{app:minimax}.
+
+Notre implémentation est inspirée de \cite{optimisations}, auquel nous avons ajouté notre struture basées sur les noeuds.
+
+\begin{algorithm}[H]
+    \caption{Algorithme Negamax avec élagage AlphaBeta}
+    \begin{algorithmic}[1]
+    \Function{NegamaxAlphaBeta}{$noeud$, $heuristique$, $profondeur\_max$, $profondeur = 0$, $alpha = -\text{MAX\_INT}$, $beta = \text{MAX\_INT}$, $table = None$}
+        \If{$profondeur = profondeur\_max$}
+            \State $noeud.valeur \gets heuristique(noeud.pieces\_joueur, noeud.pieces\_ennemi, $ \Statex \hspace{1\algorithmicindent} $noeud.taille, table)$
+            \State \Return $noeud$
+        \EndIf
+        \If{non $noeud.visite$}
+            \State $noeud.developper()$
+        \EndIf
+        \If{non $noeud.coups$}
+            \State $noeud.valeur \gets heuristique(noeud.pieces\_joueur, noeud.pieces\_ennemi, $ \Statex \hspace{1\algorithmicindent} $noeud.taille, table)$
+            \State \Return $noeud$
+        \EndIf
+        \State $meilleur \gets -\text{MAX\_INT}$
+        \State $indices \gets []$
+        \For{$i, coup$ in $enumerate(noeud.coups)$}
+            \If{$noeud.coups\_vers\_enfant[coup] = None$}
+                \State $noeud.definir\_enfant(coup)$
+            \EndIf
+            \State $enfant \gets noeud.coups\_vers\_enfant[coup]$
+            \State $enfant.valeur \gets -\text{NegamaxAlphaBeta}(enfant, heuristique, profondeur\_max, $ \Statex \hspace{1\algorithmicindent} $profondeur + 1, -beta, -alpha, table).valeur$
+            \If{$enfant.valeur > meilleur$}
+                \State $meilleur \gets enfant.valeur$
+                \State $indices \gets [i]$
+                \If{$meilleur > alpha$}
+                    \State $alpha \gets meilleur$
+                    \If{$alpha > beta$}
+                        \State \Return $noeud.enfants[random.choice(indices)]$
+                    \EndIf
+                \EndIf
+            \ElsIf{$enfant.valeur = meilleur$}
+                \State $indices.append(i)$
+            \EndIf
+        \EndFor
+        \State \Return $noeud.enfants[random.choice(indices)]$
+    \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+Voici les étapes clés de l'algorithme Negamax avec élagage AlphaBeta :
+
+\begin{enumerate}[label=\textbf{Étape \arabic*:}, wide, labelwidth=!, labelindent=0pt]
+    \item \textbf{Fin de la Récursion:} La récursion se termine si la profondeur maximale est atteinte ou s'il n'y a plus de coups possibles à jouer.
+
+    \item \textbf{Génération des Coups:} Les coups possibles sont générés uniquement si cela n'a pas déjà été fait pour le nœud courant. Cette étape évite la redondance et optimise la performance de l'algorithme.
+
+    \item \textbf{Parcours en Profondeur:} L'algorithme explore en profondeur chaque coup possible, en simulant le coup et en passant au nœud enfant correspondant.
+
+    \item \textbf{Élagage AlphaBeta:} Durant le parcours, l'algorithme utilise l'élagage AlphaBeta pour couper les branches de l'arbre de jeu qui ne peuvent pas affecter le résultat final. Cela permet de réduire considérablement l'espace de recherche.
+\end{enumerate}
+$\rightarrow$  Pendant l'élagage, nous gardons une trace des meilleurs coups rencontrés. Ainsi, nous nous pouvons choisir parmi plusieurs coups équivalents, et éviter le déterminisme.
+
+\begin{enumerate}[resume, label=\textbf{Étape \arabic*:}, wide, labelwidth=!, labelindent=0pt]
+    \item \textbf{Stockage des Meilleurs Coups:} L'algorithme garde une trace des meilleurs coups rencontrés. Si un coup a une valeur supérieure à l'actuelle meilleure valeur (alpha), cette valeur est mise à jour.
+
+    \item \textbf{Retour du Meilleur Coup:} Une fois tous les coups explorés, l'algorithme retourne aléatoirement un noeud parmi les meilleurs trouvé.
+\end{enumerate}
 
 
 \subsection{Évaluateur de la qualité d'une position avec PyTorch}
