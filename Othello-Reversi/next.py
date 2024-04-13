@@ -40,7 +40,7 @@ def make_move(own: int, enemy: int, move_to_play: int, directions: dict) -> tupl
         victims = move_to_play  # Init the victims with the move to play
 
         op_dir = opposite_dir(direction)  # opposite direction since we 
-        #go from the move to play to the captured pieces
+        # go from the move to play to the captured pieces
         for _ in range(count):
             victims |= (op_dir(victims) & enemy)
         own ^= victims
@@ -86,7 +86,8 @@ def south_east(x):
     return south(east(x))
 
 
-opposite_direction = {north: south, south: north, east: west, west: east, north_west: south_east, north_east: south_west, south_west: north_east, south_east: north_west}
+opposite_direction = {north: south, south: north, east: west, west: east,
+                      north_west: south_east, north_east: south_west, south_west: north_east, south_east: north_west}
 
 
 def opposite_dir(direction):

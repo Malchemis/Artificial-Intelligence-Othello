@@ -5,28 +5,91 @@ import os
 from game import othello
 from node import replay
 from utils.measure import time_n, time_only
-from utils.minmax_params import Strategy
+from utils.minmax_params import Algorithm, Strategy
 
 
-def no_heuristics_strategy(n_iterations=100, stats_path=None):
-    """Test multiple configurations using grid search.
-    The objective is to analyse performance relative to algorithms and strategies that don't need any heuristics."""
+def championship(n_iterations=100, stats_path=None):
+    """Test multiple configurations using grid search."""
     os.makedirs(stats_path, exist_ok=True)
 
-    default_minimax_strategy = [Strategy.NEGAMAX_ALPHA_BETA, Strategy.NEGAMAX_ALPHA_BETA]
-    defaults_threshold = [30, 55]
-    algorithms = [Strategy.RANDOM, Strategy.ABSOLUTE, Strategy.MOBILITY]
+    default_minimax_algorithm = [Algorithm.NEGAMAX_ALPHA_BETA, Algorithm.NEGAMAX_ALPHA_BETA]
+    defaults_threshold = [30, 55]   # Default thresholds for MIXED strategy
+    strategies_noh = [Strategy.ABSOLUTE, Strategy.MOBILITY]
+    strategies_heu = [Strategy.POSITIONAL, Strategy.MIXED]
     depths = [2, 4, 6]
-    for depth1 in depths:
-        for depth2 in depths:
-            for algorithm1 in algorithms:
-                for algorithm2 in algorithms:
+    tables = [1, 2]  # only consider for POSITIONAL and MIXED strategies
+    # Total: 3*(4 + 8 + 8 + 16) = 108 trials
+    for depth in depths:
+        # Non-heuristic against non-heuristic (2*2 = 4)
+        for strategy1 in strategies_noh:
+            for strategy2 in strategies_noh:
+                _, _, _, _, _ = time_n(
+                    othello, n_iterations,
+                    ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
+                     [0, 0], defaults_threshold, 8, False, False,
+                     stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{0}_{0}_"
+                                  f"{default_minimax_algorithm[0]}.csv")
+                )
+        # Heuristic against non-heuristic (2*2*2 = 8)
+        for strategy1 in strategies_heu:
+            for strategy2 in strategies_noh:
+                for table in tables:
                     _, _, _, _, _ = time_n(
                         othello, n_iterations,
-                        ([algorithm1, algorithm2], default_minimax_strategy, [depth1, depth2],
-                         [0, 0], defaults_threshold, 8, False, False,
-                         stats_path + f"/no_heuristics_table_{algorithm1}_{algorithm2}_{depth1}_{depth2}.csv")
+                        ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
+                         [table, 0], defaults_threshold, 8, False, False,
+                         stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{table}_{0}_"
+                                      f"{default_minimax_algorithm[0]}.csv")
                     )
+        # Non-heuristic against heuristic (2*2*2 = 8)
+        for strategy1 in strategies_noh:
+            for strategy2 in strategies_heu:
+                for table in tables:
+                    _, _, _, _, _ = time_n(
+                        othello, n_iterations,
+                        ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
+                         [0, table], defaults_threshold, 8, False, False,
+                         stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{0}_{table}_"
+                                      f"{default_minimax_algorithm[0]}.csv")
+                    )
+        # Heuristic against heuristic (2*2*2*2 = 16)
+        for strategy1 in strategies_heu:
+            for strategy2 in strategies_heu:
+                for table1 in tables:
+                    for table2 in tables:
+                        _, _, _, _, _ = time_n(
+                            othello, n_iterations,
+                            ([strategy1, strategy2], default_minimax_algorithm, [depth, depth],
+                             [table1, table2], defaults_threshold, 8, False, False,
+                             stats_path + f"/championship{strategy1}_{strategy2}_{depth}_{table1}_{table2}_"
+                                          f"{default_minimax_algorithm[0]}.csv")
+                        )
+
+
+def complexity_analysis(n_iterations=100, stats_path=None):
+    """Test multiple configurations using grid search.
+    Measure number of explored nodes."""
+    os.makedirs(stats_path, exist_ok=True)
+
+    # We compare only Negamax and Negamax with alpha-beta pruning against random player
+    defaults_threshold = [30, 55]   # Default thresholds for MIXED strategy
+    default_strategy = Strategy.RANDOM
+    default_table = 2  # We only consider the second table (which is the better one)
+
+    depths = [2, 4, 6]
+    algorithms = [Algorithm.NEGAMAX, Algorithm.NEGAMAX_ALPHA_BETA]
+    strategies = [Strategy.POSITIONAL, Strategy.ABSOLUTE, Strategy.MOBILITY, Strategy.MIXED]
+    # Total: 3*2*4 = 24 trials
+    for depth in depths:
+        for algorithm in algorithms:
+            for strategy in strategies:
+                _, _, _, _, _ = time_n(
+                    othello, n_iterations,
+                    ([strategy, default_strategy], [algorithm, 0], [depth, 0],
+                     [default_table, 0], defaults_threshold, 8, False, False,
+                     stats_path + f"/complexity_{strategy}_{default_strategy}_{depth}_{default_table}_{0}_{algorithm}"
+                                  f".csv")
+                )
 
 
 def default_run():
@@ -67,4 +130,5 @@ def default_run():
 
 if __name__ == "__main__":
     # default_run()
-    no_heuristics_strategy(100, "../stats/")
+    complexity_analysis(100, "../stats/")
+    championship(100, "../stats/")

@@ -30,13 +30,19 @@ TABLE2 = np.array(
 
 
 # Enums for the strategies
-class Strategy:
+class Algorithm:
     # Minimax algorithms
-    MINIMAX = 0
-    ALPHABETA = 1
-    NEGAMAX = 2
-    NEGAMAX_ALPHA_BETA = 3
+    NONE = 0
+    MINIMAX = 1
+    ALPHABETA = 2
+    NEGAMAX = 3
+    NEGAMAX_ALPHA_BETA = 4
 
+    def __init__(self):
+        pass
+
+
+class Strategy:
     # Mode for the player
     HUMAN = 0
     RANDOM = 1
@@ -51,6 +57,7 @@ class Strategy:
 
 class Heuristic:
     # Heuristic evaluation functions
+    NONE = 0
     TABLE1 = 1
     TABLE2 = 2
 

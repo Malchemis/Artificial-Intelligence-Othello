@@ -368,12 +368,51 @@ $\rightarrow$  Pendant l'élagage, nous gardons une trace des meilleurs coups re
 
 \subsection{Évaluateur de la qualité d'une position avec PyTorch}
 \label{subsec:eval}
+Nous avons également implémenté un évaluateur de la qualité d'une position, basé sur un modèle de deep learning. Nous avons utilisé PyTorch pour construire un réseau de neurones convolutif, entraîné sur la base de données WTHOR\footnote{WTHOR est une base de données de parties d'Othello, disponible sur \href{http://www.ffothello.org/informatique/la-base-wthor/}{ffothello.org}.}. Nous avons ensuite utilisé ce modèle pour prédire le résultat d'une partie en cours, en évaluant la position actuelle du jeu.
+
+L'entière pipeline permettant d'obtenir le modèle qui va suivre est disponible dans le notebook \texttt{model\_pipeline.ipynb}.
 
 \subsubsection{Extraire les données de la WTHOR database}
 \label{subsubsec:wthor}
+Les fichiers .wtb sont organisés comme suit :
+\begin{itemize}
+    \item \textbf{En-tête de 16 octets} qui contient :
+    \begin{itemize}
+        \item 1 octet pour le siècle de la création du fichier.
+        \item 1 octet pour l'année de la création du fichier.
+        \item 1 octet pour le mois et le jour de la création du fichier.
+        \item 4 octets pour le nombre de parties contenues dans le fichier (jusqu'à 2 147 483 648 parties).
+        \item 2 octets inutilisés dans ce contexte.
+        \item 1 octet pour l'année des jeux.
+        \item 1 octet pour la taille du plateau (0 ou 8 pour 8x8, 10 pour 10x10).
+        \item 1 octet pour le type de jeu (0 pour le jeu normal, 1 pour le "solitaire").
+        \item 1 octet pour la profondeur du jeu.
+        \item 1 octet réservé.
+    \end{itemize}
+    \item \textbf{Informations de partie} pour chaque jeu incluant :
+    \begin{itemize}
+        \item 2 octets pour l'étiquette du tournoi.
+        \item 2 octets pour l'identifiant du joueur noir.
+        \item 2 octets pour l'identifiant du joueur blanc.
+        \item 1 octet pour le score réel du joueur noir.
+        \item 1 octet pour le score théorique du joueur noir.
+    \end{itemize}
+    \item \textbf{60 octets de mouvements} par partie, listant les coups joués.
+\end{itemize}
+
+\subsection*{Décodage des fichiers}
+\begin{enumerate}
+    \item Les fichiers sont lus par le biais d'une fonction génératrice qui parcourt un répertoire et extrait les informations de chaque fichier .wtb.
+    \item Pour chaque fichier, l'en-tête est lu pour vérifier la taille du plateau et le nombre de jeux.
+    \item Les informations de chaque partie sont ensuite lues suivies par la liste des mouvements.
+    \item Chaque mouvement est décodé de la représentation en octets à une représentation sur le plateau de jeu, utilisant les coordonnées (x, y).
+\end{enumerate}
 
 \subsubsection{Prétraitement des données}
 \label{subsubsec:preproc}
+Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entrainement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc.
+
+Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment.
 
 \subsubsection{Création du modèle}
 \label{subsubsec:model}

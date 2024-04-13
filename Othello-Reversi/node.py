@@ -5,12 +5,13 @@ from utils.visualize import cv2_display
 
 
 class Node:
-    def __init__(self, parent, own_pieces, enemy_pieces, turn, size):
+    def __init__(self, parent, own_pieces, enemy_pieces, turn, size, origin):
         self.parent = parent
         self.own_pieces = own_pieces
         self.enemy_pieces = enemy_pieces
         self.turn = turn
         self.size = size
+        self.origin = origin
         self.children = []
         self.moves = []
         self.directions = {}
@@ -26,7 +27,7 @@ class Node:
 
     def set_child(self, move):
         own, enemy = make_move(self.own_pieces, self.enemy_pieces, move, self.directions)
-        child = Node(self, enemy, own, -self.turn, self.size)
+        child = Node(self, enemy, own, -self.turn, self.size, self.origin)
         self.moves_to_child[move] = child
         self.children.append(child)
         return child
@@ -35,7 +36,7 @@ class Node:
         for child in self.children:
             if child == other:
                 return child
-        child = Node(self, other.own_pieces, other.enemy_pieces, other.turn, other.size)
+        child = Node(self, other.own_pieces, other.enemy_pieces, other.turn, other.size, self.origin)
         self.children.append(child)
         return child
 
@@ -62,11 +63,9 @@ class Node:
 def replay(node: Node, size: int, verbose=False) -> List[Node]:
     """Replay the game based on the moves of the Node by backtracking the tree and using a LIFO queue"""
     game = []
-    count_child = 0
     while node.parent is not None:
         game.append(node)
         node = node.parent
-        count_child += len(node.children)
     game.reverse()
     for node in game:
         if not node.moves:

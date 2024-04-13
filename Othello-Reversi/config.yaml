@@ -30,11 +30,12 @@ n: 2000
 mode: [0, 2]
 
 # Which MiniMax version to use.
-# 0: Default MiniMax
-# 1: Alpha-Beta pruning
-# 2: Default Negamax
-# 3: Alpha-Beta pruning Negamax
-minimax_mode: [3, 3]
+# 0: NONE
+# 1: Default MiniMax
+# 2: Alpha-Beta pruning
+# 3: Default Negamax
+# 4: Alpha-Beta pruning Negamax
+minimax_mode: [4, 4]
 
 # Maximum depth of the search tree (minimax algorithm)
 max_depth: [4, 4]
@@ -46,7 +47,7 @@ max_depth: [4, 4]
 h_table: [0, 2]
 
 # Threshold for when to switch strategies if mode is Mixed. 
-threshold: [30, 55] # Default = [15, 45]
+threshold: [30, 55] # Default = [30, 55]
 
 # Size of the board
 size: 8 # The program is not yet fully tested with other sizes than 8
