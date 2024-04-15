@@ -174,7 +174,7 @@ $\rightarrow$ Préservation des connaissances : à chaque fin d'itération, lors
 
 \section{Algorithmes}
 \label{sec:algo}
-Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs la plus couteuse en temps de calcul. La représentation en bitboards nous permet de réaliser ces opérations de manière très efficace, comparable à une vectorisation. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis.
+Le calcul des coups valides est une étape cruciale pour le jeu, c'est par ailleurs la plus coûteuse en temps de calcul. La représentation en bitboards nous permet de réaliser ces opérations de manière très efficace, comparable à une vectorisation. Il est en effet possible de calculer simultanément les coups valides qui sont dans la même direction, en utilisant des masques prédéfinis.
 \subsection{Décaler un bitboard}
 \label{subsec:shift}
 Pour réaliser cela, nous devons être capable de décaler un plateau entier dans les 8 directions cardinales. Nous y parvenons tel que suit :
@@ -416,14 +416,14 @@ De ce processus, nous avons pu reconstruire 130,458 parties.
 
 \subsubsection{Prétraitement des données}
 \label{subsubsec:preproc}
-Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entrainement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc. Ainsi, nous avons pu extraire plus de 6 millions positions de jeu, exactement 3,847,000 pour le joueur noir, et 3,682,000 pour le joueur blanc. Ces positions proviennent tous de parties respectivement gagnées par le premier joueur ou le second. 
+Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entraînement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc. Ainsi, nous avons pu extraire plus de 6 millions positions de jeu, exactement 3,847,000 pour le joueur noir, et 3,682,000 pour le joueur blanc. Ces positions proviennent tous de parties respectivement gagnées par le premier joueur ou le second. 
 
 Nous notons que ce type de données implique une impossibilité d'obtenir 100\%\footnote{\cite{Liskowski_2018} ont estimé qu'un classifieur parfait pourrait obtenir 91.1\% de précision au mieux} de précision, car il existe plusieurs coups possibles pour chaque position. Ce n'est pas un problème ici, car son application est vouée à l'évaluation de la qualité des coups possibles par exemple, en comparant les différentes probabilités de victoire de chaque coup suivant pour une position donnée. Nous retenons cependant que cela pourrait introduire un biais, et une difficulté pendant la phase d'apprentissage.
 
 Différences notables avec \cite{Liskowski_2018} :
 \begin{itemize}
     \item Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment. Puisque ces deux derniers ne commencent pas avec la même configuration, il est possible que des stratégies optimales soient différentes.
-    \item Nous avons décidé de ne pas supprimé les duplicatas, car nous avons jugé que cela pourrait être une information utile pour le modèle. En effet, statistiquement, une position qui se répète dans les parties gagnantes devraient être plus considéré qu'une position rencontrée une unique fois.
+    \item Nous avons décidé de ne pas supprimer les duplicatas, car nous avons jugé que cela pourrait être une information utile pour le modèle. En effet, statistiquement, une position qui se répète dans les parties gagnantes devraient être plus considéré qu'une position rencontrée une unique fois.
     \item Il est usuel de considérer les symétries du plateau, mais nous avons manqué de temps pour implémenter cette fonctionnalité. Nous avions de toute façon déjà trop de données pour les ressources matérielles disponibles.
 \end{itemize}
 
