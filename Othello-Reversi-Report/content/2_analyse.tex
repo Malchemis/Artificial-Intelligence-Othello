@@ -368,9 +368,11 @@ $\rightarrow$  Pendant l'élagage, nous gardons une trace des meilleurs coups re
 
 \subsection{Évaluateur de la qualité d'une position avec PyTorch}
 \label{subsec:eval}
-Nous avons également implémenté un évaluateur de la qualité d'une position, basé sur un modèle de deep learning. Nous avons utilisé PyTorch pour construire un réseau de neurones convolutif, entraîné sur la base de données WTHOR\footnote{WTHOR est une base de données de parties d'Othello, disponible sur \href{http://www.ffothello.org/informatique/la-base-wthor/}{ffothello.org}.}. Nous avons ensuite utilisé ce modèle pour prédire le résultat d'une partie en cours, en évaluant la position actuelle du jeu.
+Nous avons également développé un évaluateur de la qualité d'une position, basé sur un modèle de deep learning. Nous avons utilisé PyTorch pour construire un réseau de neurones convolutif, entraîné sur la base de données WTHOR\footnote{WTHOR est une base de données de parties d'Othello, disponible sur \href{http://www.ffothello.org/informatique/la-base-wthor/}{ffothello.org}.}. Nous avons ensuite utilisé ce modèle pour prédire le résultat d'une partie en cours, en évaluant la position actuelle du jeu.
 
 L'entière pipeline permettant d'obtenir le modèle qui va suivre est disponible dans le notebook \texttt{model\_pipeline.ipynb}.
+
+Nous nous sommes inspirés de \cite{Liskowski_2018} pour le développement de ce modèle.
 
 \subsubsection{Extraire les données de la WTHOR database}
 \label{subsubsec:wthor}
@@ -408,13 +410,70 @@ Les fichiers .wtb sont organisés comme suit :
     \item Chaque mouvement est décodé de la représentation en octets à une représentation sur le plateau de jeu, utilisant les coordonnées (x, y).
 \end{enumerate}
 
+Les données d'un fichier .wtb ne contiennent que les coups joués dans l'ordre, et non qui est le joueur noir ou blanc. Pour pourvoir obtenir ces informations et obtenir correctement chaque partie, il nous est donc nécessaire de la rejouer dans son intégralité à partir de chaque coup, et de déterminer par exemple les tours où certains joueurs n'ont pas peu jouer.
+
+De ce processus, nous avons pu reconstruire 130,458 parties.
+
 \subsubsection{Prétraitement des données}
 \label{subsubsec:preproc}
-Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entrainement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc. Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment.
+Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entrainement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc. Ainsi, nous avons pu extraire plus de 6 millions positions de jeu, exactement 3,847,000 pour le joueur noir, et 3,682,000 pour le joueur blanc. Ces positions proviennent tous de parties respectivement gagnées par le premier joueur ou le second. 
+
+Nous notons que ce type de données implique une impossiblité d'obtenir 100\%\footnote{\cite{Liskowski_2018} ont estimé qu'un classifieur parfait pourrait obtenir 91.1\% de précision au mieux} de précision, car il existe plusieurs coups possibles pour chaque position. Ce n'est pas un problème ici, car son application est vouée à l'évaluation de la qualité des coups possibles par exemple, en comparant les différentes probabilités de victoire de chaque coup suivant pour une position donnée. Nous retenons cependant que cela pourrait introduire un biais, et une difficulté pendant la phase d'apprentissage.
+
+Différences notables avec \cite{Liskowski_2018} :
+\begin{itemize}
+    \item Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment. Puisque ces deux derniers ne commencent pas avec la même configuration, il est possible que des stratégies obtimalles soient différentes.
+    \item Nous avons décidé de ne pas supprimé les duplicatas, car nous avons jugé que cela pourrait être une information utile pour le modèle. En effet, statistiquement, une position qui se répète dans les parties gagnantes devraient être plus considéré qu'une position rencontrée une unique fois.
+    \item Il est usuel de considérer les symétries du plateau, mais nous avons manqué de temps pour implémenter cette fonctionnalité. Nous avions de toute façon déjà trop de données pour les ressources matérielles disponibles.
+\end{itemize}
 
 \subsubsection{Création du modèle}
 \label{subsubsec:model}
+Nous avions quelques idées intéressantes pour cette partie, telles que construire un noyau spécialisé (convolution) pour chaque direction, ou utiliser des réseaux de neurones récurrents pour prendre en compte l'historique des coups. Cependant, nous avons décidé de rester simple pour cette première itération, et avons construit un réseau de neurones convolutif classique, en essayant de reproduire les résultats de \cite{Liskowski_2018} (ou de s'en approcher).
+
+Ainsi, nous définissons un réseau de neurones convolutif à huit niveaux avec le résumé suivant :
+\begin{table}[ht]
+    \centering
+    \caption{Résumé du modèle pour une taille de batch de 256.}
+    \begin{tabular}{@{}llr@{}} % Left, left, right alignment
+    \toprule
+    \textbf{Layer (type)} & \textbf{Output Shape} & \textbf{Param \#} \\
+    \midrule
+    Conv2d-1 & [256, 64, 8, 8] & 640 \\
+    BatchNorm2d-2 & [256, 64, 8, 8] & 128 \\
+    Conv2d-3 & [256, 64, 8, 8] & 36,928 \\
+    BatchNorm2d-4 & [256, 64, 8, 8] & 128 \\
+    Conv2d-5 & [256, 128, 8, 8] & 73,856 \\
+    BatchNorm2d-6 & [256, 128, 8, 8] & 256 \\
+    Conv2d-7 & [256, 128, 8, 8] & 147,584 \\
+    BatchNorm2d-8 & [256, 128, 8, 8] & 256 \\
+    Conv2d-9 & [256, 256, 8, 8] & 295,168 \\
+    BatchNorm2d-10 & [256, 256, 8, 8] & 512 \\
+    Conv2d-11 & [256, 256, 8, 8] & 590,080 \\
+    BatchNorm2d-12 & [256, 256, 8, 8] & 512 \\
+    Conv2d-13 & [256, 256, 8, 8] & 590,080 \\
+    BatchNorm2d-14 & [256, 256, 8, 8] & 512 \\
+    Conv2d-15 & [256, 256, 8, 8] & 590,080 \\
+    BatchNorm2d-16 & [256, 256, 8, 8] & 512 \\
+    Linear-17 & [256, 128] & 2,097,280 \\
+    Linear-18 & [256, 64] & 8,256 \\
+    \midrule
+    \multicolumn{2}{l}{Total params} & 4,432,768 \\
+    \multicolumn{2}{l}{Trainable params} & 4,432,768 \\
+    \multicolumn{2}{l}{Non-trainable params} & 0 \\
+    \midrule
+    \multicolumn{2}{l}{Input size (MB)} & 0.06 \\
+    \multicolumn{2}{l}{Forward/backward pass size (MB)} & 352.38 \\
+    \multicolumn{2}{l}{Params size (MB)} & 16.91 \\
+    \multicolumn{2}{l}{Estimated Total Size (MB)} & 369.35 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsubsection{Entraînement du modèle}
 \label{subsubsec:train}
+Nous avons entraîné le modèle comme nous avons pu sur Kaggle\footnote{\url{https://www.kaggle.com/}}, en utilisant un GPU P100. Nous avons utilisé la fonction de perte \texttt{CrossEntropyLoss}, et l'optimiseur \texttt{Adam}. Nous avons entraîné le modèle pendant 100 époques, avec un taux d'apprentissage de 0.01, et avec Early Stopping. Nous avons utilisé une taille de batch de 256.
 
+Plus de précision sont disponibles dans le notebook \texttt{model\_pipeline.ipynb}.
+
+Malheureusement, nous n'avons pas pu obtenir de réels résultats, dû à la quantité immense des données, et au temps nécessaire pour l'entraînement. Kaggle ou Colab\footnote{\url{https://colab.research.google.com/}} ne fournissant pas de GPU suffisamment longtemps pour notre tâche, nous avons dû nous arrêter après quelques époques (en les répétant un à une puisque le notebook s'arrêtait).
