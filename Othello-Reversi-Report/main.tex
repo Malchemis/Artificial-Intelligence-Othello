@@ -1,45 +1,74 @@
 \documentclass[a4paper,11pt]{report}
+
+% Document Setup
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{boldline,multirow,tabularx,colortbl,diagbox,makecell,fancybox}
-\usepackage{amsfonts,amssymb,amsmath,mathrsfs,array,stmaryrd}
-\usepackage{pgf,tikz,xcolor}
-\usetikzlibrary{calc,positioning,shapes.geometric,shapes.symbols,shapes.misc, fit, calc, shapes, arrows, arrows.meta,fadings,through}
+\usepackage[french]{babel}
+
+% Page Layout
 \usepackage[top=3cm, bottom=3cm, left=3cm, right=3cm]{geometry}
 \usepackage{fancyhdr}
-\usepackage{hyperref}
-
-\usepackage[french]{babel}
-\usepackage{appendix,listings,enumerate}
-\usepackage{ifluatex}
-\usepackage[backend=biber, sorting=none, style=alphabetic]{biblatex}
-\usepackage{csquotes}
-\usepackage[printonlyused]{acronym}
-\addbibresource{refs/bibliography.bib}
-
-\usepackage{enumitem}
 \usepackage{indentfirst}
-\usepackage{notoccite}
 
-\usepackage[nodayofweek,level]{datetime}
+% Fonts and Text
+\usepackage{csquotes}
+\usepackage{enumitem}
 
-\usepackage{dirtree}
-\usepackage{forest}
+% Mathematical Tools
+\usepackage{amsfonts, amssymb, amsthm, amsmath, mathrsfs, array, stmaryrd}
+
+% Tables
+\usepackage{boldline, multirow, tabularx, colortbl, diagbox, makecell, booktabs}
+\usepackage{siunitx} % For alignment and percentage formatting
+\usepackage{graphicx} % Required for \resizebox
+
+\sisetup{
+    round-mode=places, % Rounds numbers
+    round-precision=2, % to 2 decimal places
+    table-format=2.2\%, % Aligning by decimal points
+    table-space-text-post=\%, % Ensuring space for the percent sign
+}
+
+% Graphics and Colors
+\usepackage{pgf, tikz, xcolor}
+\usetikzlibrary{calc, positioning, shapes.geometric, shapes.symbols, shapes.misc, fit, calc, shapes, arrows, arrows.meta, fadings, through}
+
+% Hyperlinks and PDF Handling
+\usepackage{hyperref}
 \usepackage{pdfpages}
 
-\usepackage{booktabs}
-\usepackage{caption}
+% Listings and Algorithms
+\usepackage{listings, algorithm, algpseudocode}
+\usepackage{enumitem} 
 
+% Date and Time
+\usepackage[nodayofweek, level]{datetime}
+
+% Additional Tools
+\usepackage{ifluatex}
+\usepackage{notoccite}
+\usepackage{appendix}
+\usepackage{fancybox}
+\usepackage[backend=biber, sorting=none, style=alphabetic]{biblatex}
+\addbibresource{refs/bibliography.bib}
+\usepackage[printonlyused]{acronym}
+\usepackage{caption}
 \usepackage{float}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
+
+% Forestry and Directory Trees
+\usepackage{dirtree}
+\usepackage{forest}
+\usepackage{amssymb}
+
+% Custom Definitions
 \newtheorem{definition}{Definition}
 
+% Input Files
 \input{variables}
 \input{advanced.params/misc.commands}
-\input{advanced.params/titlevars.tex}
-\input{cover/covermain.tex}
+\input{advanced.params/titlevars}
+\input{cover/covermain}
 
 \begin{document}
-\input{content/__all__.tex}
+\input{content/__all__}
 \end{document}
