@@ -400,7 +400,7 @@ Les fichiers .wtb sont organisés comme suit :
     \item \textbf{60 octets de mouvements} par partie, listant les coups joués.
 \end{itemize}
 
-\subsection*{Décodage des fichiers}
+\subsubsection{Décodage des fichiers}
 \begin{enumerate}
     \item Les fichiers sont lus par le biais d'une fonction génératrice qui parcourt un répertoire et extrait les informations de chaque fichier .wtb.
     \item Pour chaque fichier, l'en-tête est lu pour vérifier la taille du plateau et le nombre de jeux.
@@ -410,9 +410,7 @@ Les fichiers .wtb sont organisés comme suit :
 
 \subsubsection{Prétraitement des données}
 \label{subsubsec:preproc}
-Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entrainement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc.
-
-Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment.
+Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entrainement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc. Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment.
 
 \subsubsection{Création du modèle}
 \label{subsubsec:model}
