@@ -5,13 +5,16 @@ Nous désirons mesurer deux aspects de notre programme : la qualité des straté
 
 \section{Mesure de complexité : Exploration de l'arbre de jeu}
 \label{sec:game_tree_exploration}
-Nous comparons ici la complexité en temps et en nombre de nœuds explorés. Nous avons mesuré ces deux aspects sur 24 configurations. Elles correspondent à un affrontement entre soit Minimax, soit Alpha-Beta contre un joueur aléatoire avec une profondeur de recherche de 2, 4 et 6, sur différentes stratégies. Nous avons mesuré le temps de calcul pour chaque partie jouée. L'unité des valeurs entre parenthèses est la seconde.
+Nous comparons ici la complexité en temps et en nombre de nœuds explorés. Nous avons mesuré ces deux aspects sur 24 configurations. Elles correspondent à un affrontement entre soit Minimax, soit Alpha-Beta contre un joueur aléatoire avec une profondeur de recherche de 2, 4 et 6, sur différentes stratégies.
+
+\subsection*{Temps de calcul}
+Nous avons mesuré le temps de calcul pour chaque partie jouée. L'unité des valeurs entre parenthèses est la seconde.
 
 
 \begin{table}[H]
     \centering
     \caption{Analyse comparative du temps d'exécution d'une partie en fonction des profondeurs et stratégies (rapport NegamaxAlphaBeta(gauche)/Negamax(droite))}
-    \resizebox{0.9\textwidth}{!}{% Resize table to fit within the text width, keeping aspect ratio
+    \resizebox{0.75\textwidth}{!}{% Resize table to fit within the text width, keeping aspect ratio
         \begin{tabular}{
             @{}
             >{\raggedright\arraybackslash}p{1cm}
@@ -48,7 +51,7 @@ Nous comparons ici la complexité en temps et en nombre de nœuds explorés. Nou
 \end{table}
 
 
-\subsection{Nombre de nœuds explorés}
+\subsection*{Nombre de nœuds explorés}
 \label{subsec:node_explored}
 Nous avons mesuré à chaque coup des joeurs, le nombre de nœuds explorés. Nous pouvons donc comparer chaque algorithme sur un graphe pour chaque profondeur donnée\footnote{Chaque figure est disponible séparément dans les appendices \ref{app:node_explored}.}. Nous avons également calculé le nombre moyen de nœuds explorés pour chaque configuration. Les résultats sont présentés dans les tableaux \ref{tab:node_explored_summary} et \ref{tab:node_explored_summary-2}.
 
@@ -157,10 +160,12 @@ Formulons un récapitulatif, nous pouvons observer le nombre moyen de nœuds exp
 
 
 
-\section{Championnat : Comparaison des algorithmes}
+\section{Championnat : Comparaison des configurations}
 \label{sec:championship}
 
-Dans premier temps, comparons les scores en fonctions de l'heuristique utilisée. Les tableaux correspondent à ceux donnés dans le cours. Les scores sont tous simplement le nombre de points obtenues en moyenne par chaque joueur. Nous avons mesuré les scores pour chaque configuration, et les résultats sont présentés dans les tableaux \ref{tab:championship-black} (\ac{PdV} du Joueur Noir) et \ref{tab:championship-white} (\ac{PdV} du Joueur Blanc).
+Dans un premier temps, comparons les scores en fonctions de l'heuristique utilisée. Les tableaux correspondent à ceux donnés dans le cours. Les scores sont tous simplement le nombre de points obtenues en moyenne par chaque joueur. Nous avons mesuré les scores pour chaque configuration, et les résultats sont présentés dans les tableaux \ref{tab:championship-black} (\ac{PdV} du Joueur Noir) et \ref{tab:championship-white} (\ac{PdV} du Joueur Blanc).
+
+\subsection*{Scores en fonction de l'heuristique et par couleur}
 
 \begin{table}[H]
     \centering
@@ -224,7 +229,10 @@ Dans premier temps, comparons les scores en fonctions de l'heuristique utilisée
     \label{tab:championship-white}
 \end{table}
 
-Nous voulons maintenant comparer les statégies et l'aventage potentielle d'une couleur sur l'autre. Les résultats sont présentés dans les tableaux \ref{tab:championship-overall-black} et \ref{tab:championship-overall-white}.
+\pagebreak
+\subsection*{Scores globaux et par couleur}
+
+Nous voulons maintenant comparer les statégies et l'aventage potentiel d'une couleur sur l'autre. Les résultats sont présentés dans les tableaux \ref{tab:championship-overall-black} et \ref{tab:championship-overall-white}.
 
 \begin{table}[H]
     \centering
