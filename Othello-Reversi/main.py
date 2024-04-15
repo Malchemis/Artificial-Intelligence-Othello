@@ -1,6 +1,7 @@
 import yaml
 import pickle
 import os
+import sys
 
 from game import othello
 from node import replay
@@ -92,8 +93,8 @@ def complexity_analysis(n_iterations=100, stats_path=None):
                 )
 
 
-def default_run():
-    with open("config.yaml", "r") as file:
+def default_run(config_file="config.yaml"):
+    with open(config_file, "r") as file:
         config = yaml.safe_load(file)
 
     params = (
@@ -126,6 +127,9 @@ def default_run():
 
 
 if __name__ == "__main__":
-    default_run()
+    if len(sys.argv) > 1:
+        default_run(sys.argv[1])
+    else:
+        default_run()
     # complexity_analysis(100, "../stats/")
     # championship(100, "../stats/")

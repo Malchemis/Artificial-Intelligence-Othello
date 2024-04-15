@@ -17,7 +17,7 @@ you can uncomment the line 132 in the `main.py` file, define
 your own trial run functions or reuse the ones provided commented in the file.
 
 ```bash
-python main.py
+python path/to/main.py --config path/to/config.yaml
 ```
 
 To run the notebooks, you will need some more dependencies, install Jupyter Notebook. In particular,
