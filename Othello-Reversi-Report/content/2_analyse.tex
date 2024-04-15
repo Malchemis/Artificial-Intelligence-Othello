@@ -58,7 +58,7 @@ Par exemple, la configuration initiale du plateau de jeu est la suivante :
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{ressources/plateau_init.png}
-    \caption{Configuration initiale du plateau de jeu. Source : \href{https://www.eothello.com/}{eOthello}.}
+    \caption{Configuration initiale du plateau de jeu. Source de l'image : \href{https://www.eothello.com/}{eOthello}.}
     \label{fig:init_board}
 \end{figure}
 
@@ -159,7 +159,7 @@ $\rightarrow$ Séparation des connaissances : il y a duplication des nœuds, un 
 
     \item \textbf{Gestion de la mémoire et des statistiques :}
     \begin{itemize}
-        \item Après chaque mouvement, les enfants du nœud précédent sont éventuellement nettoyés pour optimiser l'utilisation de la mémoire.
+        \item Après chaque mouvement, les enfants du nœud parent (qui ne sont pas le noeud actuel) sont nettoyés pour optimiser l'utilisation de la mémoire.
         \item Des statistiques de jeu peuvent être collectées et enregistrées, notamment le nombre de pièces jouées et le nombre de nœuds générés.
     \end{itemize}
 \end{enumerate}
@@ -394,10 +394,10 @@ Les fichiers .wtb sont organisés comme suit :
     \item \textbf{Informations de partie} pour chaque jeu incluant :
     \begin{itemize}
         \item 2 octets pour l'étiquette du tournoi.
-        \item 2 octets pour l'identifiant du joueur noir.
-        \item 2 octets pour l'identifiant du joueur blanc.
-        \item 1 octet pour le score réel du joueur noir.
-        \item 1 octet pour le score théorique du joueur noir.
+        \item 2 octets pour l'identifiant du Joueur Noir.
+        \item 2 octets pour l'identifiant du Joueur Blanc.
+        \item 1 octet pour le score réel du Joueur Noir.
+        \item 1 octet pour le score théorique du Joueur Noir.
     \end{itemize}
     \item \textbf{60 octets de mouvements} par partie, listant les coups joués.
 \end{itemize}
@@ -410,13 +410,13 @@ Les fichiers .wtb sont organisés comme suit :
     \item Chaque mouvement est décodé de la représentation en octets à une représentation sur le plateau de jeu, utilisant les coordonnées (x, y).
 \end{enumerate}
 
-Les données d'un fichier .wtb ne contiennent que les coups joués dans l'ordre, et non qui est le joueur noir ou blanc. Pour pourvoir obtenir ces informations et obtenir correctement chaque partie, il nous est donc nécessaire de la rejouer dans son intégralité à partir de chaque coup, et de déterminer par exemple les tours où certains joueurs n'ont pas peut jouer.
+Les données d'un fichier .wtb ne contiennent que les coups joués dans l'ordre, et non qui est le Joueur Noir ou blanc. Pour pourvoir obtenir ces informations et obtenir correctement chaque partie, il nous est donc nécessaire de la rejouer dans son intégralité à partir de chaque coup, et de déterminer par exemple les tours où certains joueurs n'ont pas peut jouer.
 
 De ce processus, nous avons pu reconstruire 130,458 parties.
 
 \subsubsection{Prétraitement des données}
 \label{subsubsec:preproc}
-Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entraînement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc. Ainsi, nous avons pu extraire plus de 6 millions positions de jeu, exactement 3,847,000 pour le joueur noir, et 3,682,000 pour le joueur blanc. Ces positions proviennent tous de parties respectivement gagnées par le premier joueur ou le second. 
+Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entraînement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le Joueur Noir, et une pour le Joueur Blanc. Ainsi, nous avons pu extraire plus de 6 millions positions de jeu, exactement 3,847,000 pour le Joueur Noir, et 3,682,000 pour le Joueur Blanc. Ces positions proviennent tous de parties respectivement gagnées par le premier joueur ou le second. 
 
 Nous notons que ce type de données implique une impossibilité d'obtenir 100\%\footnote{\cite{Liskowski_2018} ont estimé qu'un classifieur parfait pourrait obtenir 91.1\% de précision au mieux} de précision, car il existe plusieurs coups possibles pour chaque position. Ce n'est pas un problème ici, car son application est vouée à l'évaluation de la qualité des coups possibles par exemple, en comparant les différentes probabilités de victoire de chaque coup suivant pour une position donnée. Nous retenons cependant que cela pourrait introduire un biais, et une difficulté pendant la phase d'apprentissage.
 
