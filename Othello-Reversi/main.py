@@ -16,7 +16,7 @@ def championship(n_iterations=100, stats_path=None):
     defaults_threshold = [30, 55]   # Default thresholds for MIXED strategy
     strategies_noh = [Strategy.ABSOLUTE, Strategy.MOBILITY]
     strategies_heu = [Strategy.POSITIONAL, Strategy.MIXED]
-    depths = [6]
+    depths = [2, 4, 6]
     tables = [1, 2]  # only consider for POSITIONAL and MIXED strategies
     # Total: 3*(4 + 8 + 8 + 16) = 108 trials
     for depth in depths:
@@ -129,6 +129,6 @@ def default_run():
 
 
 if __name__ == "__main__":
-    # default_run()
+    default_run()
     # complexity_analysis(100, "../stats/")
-    championship(5, "../stats/")
+    # championship(100, "../stats/")

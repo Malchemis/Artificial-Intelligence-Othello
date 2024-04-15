@@ -431,8 +431,9 @@ Différences notables avec \cite{Liskowski_2018} :
 \label{subsubsec:model}
 Nous avions quelques idées intéressantes pour cette partie, telles que construire un noyau spécialisé (convolution) pour chaque direction, ou utiliser des réseaux de neurones récurrents pour prendre en compte l'historique des coups. Cependant, nous avons décidé de rester simple pour cette première itération, et avons construit un réseau de neurones convolutif classique, en essayant de reproduire les résultats de \cite{Liskowski_2018} (ou de s'en approcher).
 
-Ainsi, nous définissons un réseau de neurones convolutif à huit niveaux avec le résumé suivant :
-\begin{table}[ht]
+Ainsi, nous définissons un réseau de neurones convolutif à huit niveaux avec le résumé disponible dans le tableau \ref{tab:model_summary}.
+
+\begin{table}[H]
     \centering
     \caption{Résumé du modèle pour une taille de batch de 256.}
     \begin{tabular}{@{}llr@{}} % Left, left, right alignment
@@ -468,6 +469,7 @@ Ainsi, nous définissons un réseau de neurones convolutif à huit niveaux avec 
     \multicolumn{2}{l}{Estimated Total Size (MB)} & 369.35 \\
     \bottomrule
     \end{tabular}
+    \label{tab:model_summary}
 \end{table}
 
 \subsubsection{Entraînement du modèle}
@@ -476,4 +478,4 @@ Nous avons entraîné le modèle comme nous avons pu sur Kaggle\footnote{\url{ht
 
 Plus de précision sont disponibles dans le notebook \texttt{model\_pipeline.ipynb}.
 
-Malheureusement, nous n'avons pas pu obtenir de réels résultats, dû à la quantité immense des données, et au temps nécessaire pour l'entraînement. Kaggle ou Colab\footnote{\url{https://colab.research.google.com/}} ne fournissant pas de GPU suffisamment longtemps pour notre tâche, nous avons dû nous arrêter après quelques époques (en les répétant un à une puisque le notebook s'arrêtait).
+Malheureusement, nous n'avons pas pu obtenir de réels résultats, dû au temps nécessaire pour l'entraînement ; lui-même dû à la très grande quantité de données à traîter. Kaggle ou Colab\footnote{\url{https://colab.research.google.com/}} ne fournissant pas de GPU suffisamment longtemps pour notre tâche, nous avons dû nous arrêter après quelques époques (en les répétant une à une puisque le notebook s'arrêtait à la fin de chaque époque).
