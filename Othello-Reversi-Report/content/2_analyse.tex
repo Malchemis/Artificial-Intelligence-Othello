@@ -21,11 +21,11 @@ Notre implémentation comprend notamment une représentation binaire, aussi appe
 .2 \texttt{heuristics.py} : contient les fonctions d'évaluation basées sur des heuristiques.
 .2 \textbf{utils/}.
 .3 \textit{Ensemble de fonctions utilitaires} telles que des tables d'heuristiques, la visualisation, les opérations logiques, etc.
-.2 \texttt{model\_pipeline.ipynb} : notebook Jupyter pour data preprocessing, model training, et evaluation.
+.2 \texttt{model\_pipeline.ipynb} : notebook Jupyter pour data preprocessing, model training, et évaluation.
 .2 \texttt{understanding\_bitboards.ipynb} : notebook Jupyter pour comprendre les bitboards, de nombreux exemples illustrent les opérations logiques.
 }\leavevmode\\
 
-Une partie peut être lancée depuis le programme \texttt{main.py}, ce dernier prendra les paramètres définies dans le fichier \texttt{config.yaml}. Par exemple, pour lancer une partie avec \textit{Interface} entre un joueur \textit{Humain} et un joueur \textit{Negamax-AlphaBeta}, en utilisant une stratégie \textit{Positionnelle} pour l'évaluation avec une profondeur d'exploration maximale de 4 coups, nous obtenons le fichier de configuration suivant: 
+Une partie peut être lancée depuis le programme \texttt{main.py}, ce dernier prendra les paramètres définis dans le fichier \texttt{config.yaml}. Par exemple, pour lancer une partie avec \textit{Interface} entre un joueur \textit{Humain} et un joueur \textit{Negamax-AlphaBeta}, en utilisant une stratégie \textit{Positionnelle} pour l'évaluation avec une profondeur d'exploration maximale de 4 coups, nous obtenons le fichier de configuration suivant: 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{ressources/configYaml.png}
@@ -47,7 +47,7 @@ De plus, les opérations logiques sur les bitboards sont très rapides, un avant
 
 \subsubsection{Comment encoder un pion, un coup, ou un plateau de jeu ?}
 \label{subsubsec:enc}
-Nous pouvons en fait tous les encoder de la même manière, à travers un entier sur $64bits$. Chaque bit représente une case du plateau, sa valeur égale à 1 si elle est occupée par un pion, ou si le coup est valide. Le \ac{MSB} correspond à la case $h8$, et le \ac{LSB} à la case $a1$. Les positions sont usuellement notés de $a1$ à $h8$, où $a$ est la colonne la plus à gauche, et $1$ la ligne la plus haute. \cite{brian_rose_2005} 
+Nous pouvons en fait tous les encoder de la même manière, à travers un entier sur $64bits$. Chaque bit représente une case du plateau, sa valeur égale à 1 si elle est occupée par un pion, ou si le coup est valide. Le \ac{MSB} correspond à la case $h8$, et le \ac{LSB} à la case $a1$. Les positions sont usuellement notées de $a1$ à $h8$, où $a$ est la colonne la plus à gauche, et $1$ la ligne la plus haute. \cite{brian_rose_2005} 
 
 Par exemple, la configuration initiale du plateau de jeu est la suivante :
 \begin{itemize}
@@ -95,7 +95,7 @@ Avec $\sim$ l'opérateur logique 'non'. Les programmes équivalents en python so
 
 \subsection{Structure Node}
 \label{subsec:node}
-Dans le contexte de ce projet, nous aimerions pouvoir rejouer des parties, déterminer les états déjà traités, et reprendre les anaylyses formulés lors de tours précédants. Pour cela, nous avons défini une structure de données nommée \texttt{Node}, qui encapsule un état du jeu, et les informations nécessaires pour l'exploration de l'arbre de recherche. Nous l'avons défini dans le fichier \texttt{node.py} via une classe Python. \vskip 0.5cm
+Dans le contexte de ce projet, nous aimerions pouvoir rejouer des parties, déterminer les états déjà traités, et reprendre les analyses formulés lors de tours précédents. Pour cela, nous avons défini une structure de données nommée \texttt{Node}, qui encapsule un état du jeu, et les informations nécessaires pour l'exploration de l'arbre de recherche. Nous l'avons défini dans le fichier \texttt{node.py} via une classe Python. \vskip 0.5cm
 
 \noindent\textbf{Attributs:}
 \begin{itemize}
@@ -115,8 +115,8 @@ Dans le contexte de ce projet, nous aimerions pouvoir rejouer des parties, déte
 \textbf{Méthodes:}
 \begin{itemize}
     \item \textbf{développer()} : Génère tous les coups possibles et prépare les structures pour l'expansion.
-    \item \textbf{définir\_enfant(coup)} : Crée un nœud enfant à partir d'un coup spécifié et l'ajoute à la liste des enfants. Si le noeud enfant existe déjà, il est simplement retourné.
-    \item \textbf{ajouter\_autre\_enfant(autre)} : Ajoute un autre nœud enfant qui n'est pas généré par un coup direct. Permet de transférer des noeuds d'un joueur à l'autre.
+    \item \textbf{définir\_enfant(coup)} : Crée un nœud enfant à partir d'un coup spécifié et l'ajoute à la liste des enfants. Si le nœud enfant existe déjà, il est simplement retourné.
+    \item \textbf{ajouter\_autre\_enfant(autre)} : Ajoute un autre nœud enfant qui n'est pas généré par un coup direct. Permet de transférer des nœuds d'un joueur à l'autre.
     \item \textbf{inverser()} : Échange les pièces du joueur et de l'ennemi et inverse le tour de jeu.
     \item \textbf{compter\_tous\_les\_enfants()} : Compte récursivement le nombre total de nœuds enfants.
 \end{itemize}
@@ -141,7 +141,7 @@ La boucle de jeu est le cœur de notre implémentation. Elle gère les interacti
         \item Si le joueur actuel ne peut pas jouer (aucun coup possible), le jeu vérifie si l'autre joueur peut jouer. Si aucun des deux joueurs ne peut jouer, le jeu se termine.
     \end{itemize}
 \end{enumerate}
-$\rightarrow$ Séparation des connaissances : il y a dupplication des noeuds, un pour chaque joueur. Pendant la phase de statégie, seul le noeud du courant est utilisé.
+$\rightarrow$ Séparation des connaissances : il y a duplication des nœuds, un pour chaque joueur. Pendant la phase de stratégie, seul le nœud du courant est utilisé.
 
 \begin{enumerate}[resume]
     \item \textbf{Affichage :}
@@ -154,7 +154,7 @@ $\rightarrow$ Séparation des connaissances : il y a dupplication des noeuds, un
         \item Une stratégie détermine le coup suivant du joueur en cours en fonction des configurations définies.
         \item La stratégie peut intégrer différentes approches et niveaux de complexité selon les règles de jeu ou les paramètres d'IA spécifiés.
         \item Si le joueur actuel est un humain, le jeu attend un clic de souris sur un coup valide pour continuer.
-        \item L'algorithme de stratégie retourne le prochain noeud.
+        \item L'algorithme de stratégie retourne le prochain nœud.
     \end{itemize}
 
     \item \textbf{Gestion de la mémoire et des statistiques :}
@@ -163,7 +163,7 @@ $\rightarrow$ Séparation des connaissances : il y a dupplication des noeuds, un
         \item Des statistiques de jeu peuvent être collectées et enregistrées, notamment le nombre de pièces jouées et le nombre de nœuds générés.
     \end{itemize}
 \end{enumerate}
-$\rightarrow$ Préservation des connaissances : à chaque fin d'itération, lorsque les joueurs doivent être inversés, la méthode \texttt{ajouter\_autre\_enfant(autre)} compare les noeuds enfants des deux joueurs, et soit crée une copie du noeud de l'autre joueur, soit récupère le noeud enfant si il existe déjà.
+$\rightarrow$ Préservation des connaissances : à chaque fin d'itération, lorsque les joueurs doivent être inversés, la méthode \texttt{ajouter\_autre\_enfant(autre)} compare les nœuds enfants des deux joueurs, et soit créé une copie du nœud de l'autre joueur, soit récupère le nœud enfant s'il existe déjà.
 \begin{enumerate}[resume]
     \item \textbf{Fin du jeu :}
     \begin{itemize}
@@ -200,7 +200,7 @@ Pour réaliser cela, nous devons être capable de décaler un plateau entier dan
     \label{alg:shift_ops}
 \end{algorithm}
 
-Les masques permettent d'éviter un débordement ou \textit{overflow}, une sortie de plateau, et de préserver les bords. Ils consistent à mettre à 0 les bits qui sont des positions sensibles dans la direction donnée. Nous obtenons ensuite $Nord-Est$, $Nord-Ouest$, $Sud-Est$, $Sud-Ouest$ en combinant les opérations précédentes. (Voir appendix \ref{app:logical_ops} pour plus de détails).
+Les masques permettent d'éviter un débordement ou \textit{overflow}, une sortie de plateau, et de préserver les bords. Ils consistent à mettre à 0 les bits qui sont des positions sensibles dans la direction donnée. Nous obtenons ensuite $Nord-Est$, $Nord-Ouest$, $Sud-Est$, $Sud-Ouest$ en combinant les opérations précédentes. (Voir appendice \ref{app:logical_ops} pour plus de détails).
 
 \subsection{Trouver les coups valides}
 \label{subsec:valid_moves}
@@ -248,12 +248,12 @@ L'objectif de cette fonction est de remplir une liste de coups possible, mais é
 
 Nous pouvons décomposer l'algorithme \ref{alg:gen_moves} en plusieurs étapes :
 \begin{enumerate}
-    \item Calculer les cases vides et initiliser les 2 structures à retourner (lignes 2-4).
+    \item Calculer les cases vides et initialiser les 2 structures à retourner (lignes 2-4).
     \item Pour chaque direction, trouver les pions de l'adversaire qui sont des candidats pour être capturés (lignes 7-10). Un ensemble de pions est candidat si son intersection avec les pions adverses n'est pas vide.
     \item Tant qu'au moins un pion est candidat, continuer de décaler dans la direction donnée, et ajouter les candidats à la liste des victimes, en mettant à jour la métrique du nombre de saut (lignes 11-18).
     \item Vérifier si les candidats peuvent être capturés en vérifiant l'intersection avec la liste des cases vides (lignes 19).
 \end{enumerate}
-À ce niveau, nous avons obtenu tous les coups valides, mais si nous voulons les jouer, nous devons les séparer. Cette opération, ainsi que les ajouts aux structures sont effectués dans les lignes 20-29.
+À ce niveau, nous avons obtenu tous les coups valides, mais si nous voulons les jouer, nous devons les séparer. Cette opération, ainsi que les ajouts aux structures sont effectuées dans les lignes 20-29.
 \begin{enumerate}
     \item Tant qu'il existe des pions à capturer, nous les isolons un par un en faisant un `ou exclusif` avec le \ac{LSB} (lignes 21-22)
     \item Le pion obtenu est ajouté à la liste des coups, et une liste vide est ajoutée à la table de transposition pour ce pion si aucun couple n'a été ajouté (lignes 23-25).
@@ -297,13 +297,13 @@ La mise à jour du plateau se fait ensuite via l'opérateur XOR :
 
 Étant donné que plusieurs directions sont envisageables pour un coup spécifique, l'opérateur XOR peut retourner une pièce plusieurs fois. Nous contournons cette problématique en employant l'opérateur OR vers la fin, pour garantir la présence du coup joué parmi nos pièces. Pour une raison analogue, nous excluons le coup joué des pierres capturées lors de l'application de l'opérateur XOR entre l'ennemi et les pièces capturables.
 
-Voir appendix \ref{app:valid_moves} pour les équivalents en Python.
+Voir appendice \ref{app:valid_moves} pour les équivalents en Python.
 
 \subsection{Minimax et Alpha-Beta}
 \label{subsec:minimax}
 Dans cette section, nous parcourons les différents algorithmes de recherche utilisés pour la prise de décision. Puisque les codes se ressemblent beaucoup, nous ne développerons que l'algorithme Negamax avec l'élagage Alpha-Beta. Toutes les versions de Minimax sont disponibles dans l'appendice \ref{app:minimax}.
 
-Notre implémentation est inspirée de \cite{optimisations}, auquel nous avons ajouté notre struture basées sur les noeuds.
+Notre implémentation est inspirée de \cite{optimisations}, auquel nous avons ajouté notre struture basées sur les nœuds.
 
 \begin{algorithm}[H]
     \caption{Algorithme Negamax avec élagage AlphaBeta}
@@ -362,7 +362,7 @@ $\rightarrow$  Pendant l'élagage, nous gardons une trace des meilleurs coups re
 \begin{enumerate}[resume, label=\textbf{Étape \arabic*:}, wide, labelwidth=!, labelindent=0pt]
     \item \textbf{Stockage des Meilleurs Coups:} L'algorithme garde une trace des meilleurs coups rencontrés. Si un coup a une valeur supérieure à l'actuelle meilleure valeur (alpha), cette valeur est mise à jour.
 
-    \item \textbf{Retour du Meilleur Coup:} Une fois tous les coups explorés, l'algorithme retourne aléatoirement un noeud parmi les meilleurs trouvé.
+    \item \textbf{Retour du Meilleur Coup:} Une fois tous les coups explorés, l'algorithme retourne aléatoirement un nœud parmi les meilleurs trouvé.
 \end{enumerate}
 
 
@@ -410,7 +410,7 @@ Les fichiers .wtb sont organisés comme suit :
     \item Chaque mouvement est décodé de la représentation en octets à une représentation sur le plateau de jeu, utilisant les coordonnées (x, y).
 \end{enumerate}
 
-Les données d'un fichier .wtb ne contiennent que les coups joués dans l'ordre, et non qui est le joueur noir ou blanc. Pour pourvoir obtenir ces informations et obtenir correctement chaque partie, il nous est donc nécessaire de la rejouer dans son intégralité à partir de chaque coup, et de déterminer par exemple les tours où certains joueurs n'ont pas peu jouer.
+Les données d'un fichier .wtb ne contiennent que les coups joués dans l'ordre, et non qui est le joueur noir ou blanc. Pour pourvoir obtenir ces informations et obtenir correctement chaque partie, il nous est donc nécessaire de la rejouer dans son intégralité à partir de chaque coup, et de déterminer par exemple les tours où certains joueurs n'ont pas peut jouer.
 
 De ce processus, nous avons pu reconstruire 130,458 parties.
 
@@ -418,11 +418,11 @@ De ce processus, nous avons pu reconstruire 130,458 parties.
 \label{subsubsec:preproc}
 Pour pouvoir entraîner notre modèle, il nous faut transformer les données extraites. Nous avons considéré pour l'entrainement, l'ensemble des positions de jeu, que nous étiquetons avec le coup suivant. Nous avons séparé cette base en deux, une pour le joueur noir, et une pour le joueur blanc. Ainsi, nous avons pu extraire plus de 6 millions positions de jeu, exactement 3,847,000 pour le joueur noir, et 3,682,000 pour le joueur blanc. Ces positions proviennent tous de parties respectivement gagnées par le premier joueur ou le second. 
 
-Nous notons que ce type de données implique une impossiblité d'obtenir 100\%\footnote{\cite{Liskowski_2018} ont estimé qu'un classifieur parfait pourrait obtenir 91.1\% de précision au mieux} de précision, car il existe plusieurs coups possibles pour chaque position. Ce n'est pas un problème ici, car son application est vouée à l'évaluation de la qualité des coups possibles par exemple, en comparant les différentes probabilités de victoire de chaque coup suivant pour une position donnée. Nous retenons cependant que cela pourrait introduire un biais, et une difficulté pendant la phase d'apprentissage.
+Nous notons que ce type de données implique une impossibilité d'obtenir 100\%\footnote{\cite{Liskowski_2018} ont estimé qu'un classifieur parfait pourrait obtenir 91.1\% de précision au mieux} de précision, car il existe plusieurs coups possibles pour chaque position. Ce n'est pas un problème ici, car son application est vouée à l'évaluation de la qualité des coups possibles par exemple, en comparant les différentes probabilités de victoire de chaque coup suivant pour une position donnée. Nous retenons cependant que cela pourrait introduire un biais, et une difficulté pendant la phase d'apprentissage.
 
 Différences notables avec \cite{Liskowski_2018} :
 \begin{itemize}
-    \item Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment. Puisque ces deux derniers ne commencent pas avec la même configuration, il est possible que des stratégies obtimalles soient différentes.
+    \item Il n'est pas commun de séparer les données de cette manière, mais nous faisons l'hypothèse que jouer en premier ou en deuxième devraient être traité différemment. Puisque ces deux derniers ne commencent pas avec la même configuration, il est possible que des stratégies optimales soient différentes.
     \item Nous avons décidé de ne pas supprimé les duplicatas, car nous avons jugé que cela pourrait être une information utile pour le modèle. En effet, statistiquement, une position qui se répète dans les parties gagnantes devraient être plus considéré qu'une position rencontrée une unique fois.
     \item Il est usuel de considérer les symétries du plateau, mais nous avons manqué de temps pour implémenter cette fonctionnalité. Nous avions de toute façon déjà trop de données pour les ressources matérielles disponibles.
 \end{itemize}
@@ -478,4 +478,4 @@ Nous avons entraîné le modèle comme nous avons pu sur Kaggle\footnote{\url{ht
 
 Plus de précision sont disponibles dans le notebook \texttt{model\_pipeline.ipynb}.
 
-Malheureusement, nous n'avons pas pu obtenir de réels résultats, dû au temps nécessaire pour l'entraînement ; lui-même dû à la très grande quantité de données à traîter. Kaggle ou Colab\footnote{\url{https://colab.research.google.com/}} ne fournissant pas de GPU suffisamment longtemps pour notre tâche, nous avons dû nous arrêter après quelques époques (en les répétant une à une puisque le notebook s'arrêtait à la fin de chaque époque).
+Malheureusement, nous n'avons pas pu obtenir de réels résultats, dû au temps nécessaire pour l'entraînement ; lui-même dû à la très grande quantité de données à traiter. Kaggle ou Colab\footnote{\url{https://colab.research.google.com/}} ne fournissant pas de GPU suffisamment longtemps pour notre tâche, nous avons dû nous arrêter après quelques époques (en les répétant une à une puisque le notebook s'arrêtait à la fin de chaque époque).

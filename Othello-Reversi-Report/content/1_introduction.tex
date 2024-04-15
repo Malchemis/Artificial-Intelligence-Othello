@@ -1,10 +1,12 @@
 \chapter{Introduction}
 \label{chap:introduction}
-Dans le cadre de ce \ac{TP}, nous avons abordé la conception et l'implémentation d'une \ac{IA} pour jouer au jeu d'Othello. Ce jeu de réflexion à deux joueurs sur un damier de 64 cases, avec des pions de deux couleurs, présente un défi intéressant pour l'IA en raison de la complexité de ses règles et de son espace de recherche combinatoire. L'objectif principal était de développer un algorithme capable de jouer contre un joueur humain ou contre une autre IA.
 
-Nous explorerons dans un premier temps la modélisation du jeu et les structures de données utilisées pour représenter le plateau et les pions. Nous décrirons ensuite les algorithmes développés, en particulier l'algorithme Minimax, et plusieurs de ses variantes. Nous présenterons également une fonction d'évaluation pour mesurer la qualité des positions.
+Dans ce projet de \ac{TP}, nous nous sommes attachés à développer et à évaluer des algorithmes d'intelligence artificielle pour le jeu d'Othello, un jeu de plateau impliquant une stratégie complexe malgré des règles apparemment simples. Othello se joue sur un damier de 64 cases avec des pions bicolores, où l'objectif est de capturer le plus grand nombre de pions adverses. Cette simplicité apparente masque une profondeur stratégique et une explosion combinatoire qui représentent un défi de taille pour la conception d'algorithmes efficaces.
 
-De plus, nous détaillerons la conception d'un classifieur pour évaluer la qualité d'une position. Nous expliquerons comment ce dernier a été entraîné et comment il se compare aux autres heuristiques.
+Ce rapport détaille le processus de conception, d'implémentation et d'évaluation de notre système d'intelligence artificielle. Nous avons adopté une approche méthodique pour modéliser le jeu, en utilisant des structures de données adaptées pour représenter efficacement le plateau et les pions. L'accent a été mis sur l'élaboration et l'amélioration de l'algorithme Minimax, ainsi que sur ses variantes, notamment les algorithmes Alpha-Beta, qui réduisent le nombre de nœuds explorés et optimisent les performances de calcul.
 
-Enfin, nous discuterons des résultats obtenus et des améliorations possibles.
+Nous avons également développé une fonction d'évaluation avancée pour mesurer la qualité des positions sur le damier, intégrant diverses heuristiques comme la position des pions, la mobilité et le contrôle du plateau. Ces heuristiques ont été testées dans différentes configurations, permettant une comparaison directe de leur efficacité à travers des matchs simulés entre notre IA et des joueurs humains, ainsi que contre d'autres configurations d'IA. En outre, ce travail inclus la conception d'un classifieur pour évaluer la qualité des positions. 
 
+Ce rapport présente donc non seulement les aspects techniques de notre approche, mais aussi une discussion sur les résultats obtenus, les défis rencontrés et les potentielles améliorations.
+
+Nous conclurons sur ce que nous avons appris de ce projet, sur les perspectives et sur les leçons tirées de cette expérience, avec un point plus personnel.
