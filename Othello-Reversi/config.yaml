@@ -8,12 +8,12 @@ profile: False
 # Whether to display a replay of the last game played
 replay: 0 # 0: no replay, 1: replay the last game, 2: replay the last game with display
 
-# Save games to pickle file
+# Save game nodes to pickle file
 #save: "../saved_games" # default to Othello-Reversi/saved_games/
 save: False
 
 # Path to statistics file
-stats_path: "../stats/custom" # default to Othello-Reversi/stats/custom.csv
+stats_path: "../stats/custom" # default to "../stats/custom" == Othello-Reversi/stats/custom.csv
 #stats_path: False
 # Number of games
 n: 2000
@@ -27,7 +27,7 @@ n: 2000
 # 4: mobility (minimizes/maximizes the number of possible moves for the opponent/player),
 # 5: mixed (uses a heuristic table to define the quality of a position). 
 # Mixed signifies using positional, then mobility, then absolute.
-mode: [0, 2]
+mode: [1, 2]
 
 # Which MiniMax version to use.
 # 0: NONE
@@ -50,10 +50,10 @@ h_table: [0, 2]
 threshold: [30, 55] # Default = [30, 55]
 
 # Size of the board
-size: 8 # The program is not yet fully tested with other sizes than 8
+size: 8 # The program is not yet fully tested with other sizes than 8. It will not work.
 
 # Whether to display the board with a graphical interface
-display: False
+display: True
 
 # Whether to print the result of a game
 verbose: 0  # Verbose levels : 0: no print, 1: print only the result, 2: print the result and the boards after each turn

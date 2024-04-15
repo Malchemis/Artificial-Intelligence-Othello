@@ -105,10 +105,7 @@ def default_run():
         config["size"],
         config["display"],
         config["verbose"],
-        config["stats_path"]
     )
-
-    os.makedirs(config["stats_path"], exist_ok=True)
 
     if config["time_only"]:
         time_only(othello, config["n"], params)  # Only time the function

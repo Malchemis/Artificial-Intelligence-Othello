@@ -11,7 +11,7 @@ import time
 
 
 def othello(mode: tuple, minimax_mode: tuple, max_depth: tuple, h_table: tuple, thresholds: tuple, size: int,
-            display: bool, verbose: int, stats_path: str) -> tuple[int, int, int, int, Node]:
+            display: bool, verbose: int, stats_path: str = None) -> tuple[int, int, int, int, Node]:
     """
     Handles the game logic of Othello. The game is played on a 8x8 board by default by two players, one with the black
     pieces (value -1) and one with the white pieces (value +1). The game starts with 2 black pieces and 2 white pieces

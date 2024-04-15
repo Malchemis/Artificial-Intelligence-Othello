@@ -1,0 +1,6 @@
+# install opencv (for diplay mode), numpy, pandas (stats), tqdm (progress bar), PyYAML (config)
+opencv-python>=4.9.0.80
+numpy>=1.26.0
+pandas>=2.2.1
+tqdm>=4.65.0
+PyYAML>=6.0.1
